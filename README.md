@@ -25,6 +25,10 @@ __Functions__
 * A function only performs one task. If it contains multiple tasks it is split into multiple functions.
 * All variables in functions are declared with local scope.
 
+__Color__
+
+* Turn color off on every AWS command with output using:  --color off
+
 __Recursion__
 
 * Use recursion when possible to limit the amount of code required to solve a problem.
@@ -46,7 +50,7 @@ __Variables__
 
 __Error messages__
 
-* Make sure all error messages clearly state the problem and how to fix the error.
+* All error messages clearly state the problem and how to fix the error.
 
 __AWS Resources__
 

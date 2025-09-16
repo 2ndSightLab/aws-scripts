@@ -1,0 +1,536 @@
+#!/bin/bash
+set -e
+
+# Prompt for AMI name
+while [ -z "$AMI_NAME" ]; do
+    echo ""
+    echo "Enter AMI name:"
+    read AMI_NAME
+    if [ -z "$AMI_NAME" ]; then
+        echo "ERROR: AMI name cannot be empty."
+    fi
+done
+
+# Add timestamp to AMI name
+TIMESTAMP=$(date +%Y%m%d-%H%M)
+AMI_NAME_WITH_TIMESTAMP="${AMI_NAME}-${TIMESTAMP}"
+
+# 1. Profile Setup
+echo "Available CLI profiles:"
+PROFILES=($(aws configure list-profiles))
+for i in "${!PROFILES[@]}"; do
+    echo "$((i+1)). ${PROFILES[i]}"
+done
+
+while [ -z "$PROFILE" ]; do
+    echo ""
+    echo "Select profile number to use for creating the AMI:"
+    read PROFILE_NUM
+    if [[ "$PROFILE_NUM" =~ ^[0-9]+$ ]] && [ "$PROFILE_NUM" -ge 1 ] && [ "$PROFILE_NUM" -le "${#PROFILES[@]}" ]; then
+        PROFILE="${PROFILES[$((PROFILE_NUM-1))]}"
+        echo "Selected profile: $PROFILE"
+    else
+        echo "ERROR: Invalid selection. Please enter a number between 1 and ${#PROFILES[@]}."
+    fi
+done
+
+echo "Available CLI profiles:"
+for i in "${!PROFILES[@]}"; do
+    echo "$((i+1)). ${PROFILES[i]}"
+done
+
+while [ -z "$KMS_PROFILE" ]; do
+    echo ""
+    echo "Select profile number to use for listing KMS keys (if in separate account):"
+    read KMS_PROFILE_NUM
+    if [[ "$KMS_PROFILE_NUM" =~ ^[0-9]+$ ]] && [ "$KMS_PROFILE_NUM" -ge 1 ] && [ "$KMS_PROFILE_NUM" -le "${#PROFILES[@]}" ]; then
+        KMS_PROFILE="${PROFILES[$((KMS_PROFILE_NUM-1))]}"
+        echo "Selected KMS profile: $KMS_PROFILE"
+    else
+        echo "ERROR: Invalid selection. Please enter a number between 1 and ${#PROFILES[@]}."
+    fi
+done
+
+# Get current region for the profile
+CURRENT_REGION=$(aws configure get region --profile "$PROFILE")
+echo ""
+echo "Enter AWS region (Enter for current region $CURRENT_REGION):"
+read REGION_INPUT
+if [ -z "$REGION_INPUT" ]; then
+    REGION="$CURRENT_REGION"
+    echo "Using current region: $REGION"
+else
+    REGION="$REGION_INPUT"
+fi
+
+if [ -z "$REGION" ]; then
+    echo "ERROR: No region specified and no default region found. Please enter a valid AWS region."
+    exit 1
+fi
+
+# 2. AMI Selection
+echo "AMI type options:"
+echo "1. AWS AMI"
+echo "2. Private AMI"
+while [ -z "$AMI_TYPE" ]; do
+    echo ""
+    echo "Select AMI type (1-2):"
+    read AMI_TYPE_CHOICE
+    case $AMI_TYPE_CHOICE in
+        1) AMI_TYPE="aws" ;;
+        2) AMI_TYPE="private" ;;
+        *) echo "ERROR: Invalid selection. Please enter 1 or 2."; AMI_TYPE_CHOICE="" ;;
+    esac
+done
+
+echo "Available operating systems:"
+echo "1. Amazon Linux"
+echo "2. Ubuntu"
+echo "3. Windows"
+echo "4. RHEL"
+while [ -z "$OS_SELECTION" ]; do
+    echo ""
+    echo "Select operating system (1-4):"
+    read OS_SELECTION
+    case $OS_SELECTION in
+        1) OS_FILTER="amzn*" ;;
+        2) OS_FILTER="ubuntu*" ;;
+        3) OS_FILTER="Windows*" ;;
+        4) OS_FILTER="RHEL*" ;;
+        *) echo "ERROR: Invalid selection. Please enter 1-4."; OS_SELECTION="" ;;
+    esac
+done
+
+echo "Available architectures:"
+echo "1. x86_64"
+echo "2. arm64"
+while [ -z "$ARCHITECTURE" ]; do
+    echo ""
+    echo "Select architecture (1-2):"
+    read ARCHITECTURE
+    case $ARCHITECTURE in
+        1) ARCH_FILTER="x86_64" ;;
+        2) ARCH_FILTER="arm64" ;;
+        *) echo "ERROR: Invalid selection. Please enter 1 or 2."; ARCHITECTURE="" ;;
+    esac
+done
+
+echo ""
+echo "Do you want to see AMI list? (y/n):"
+read SHOW_AMIS
+if [ "$SHOW_AMIS" = "y" ]; then
+    echo ""
+    echo "Available AMI name prefixes:"
+    AMI_PREFIXES=($(aws ec2 describe-images --owners amazon --region "$REGION" --profile "$PROFILE" --filters "Name=name,Values=$OS_FILTER" "Name=architecture,Values=$ARCH_FILTER" --query 'Images[*].Name' --output text --color off | tr '\t' '\n' | cut -d'/' -f1 | awk '{
+        if ($0 ~ /^amzn2/) {
+            # For amzn2, stop at second number
+            gsub(/-[0-9][^0-9]*[0-9].*$/, "", $0)
+        } else {
+            # For others, stop at first number
+            gsub(/-[0-9].*$/, "", $0)
+        }
+        gsub(/-*$/, "", $0)
+        print $0
+    }' | sort -u))
+    
+    for i in "${!AMI_PREFIXES[@]}"; do
+        echo "$((i+1)). ${AMI_PREFIXES[i]}"
+    done
+    
+    while [ -z "$AMI_NAME_SELECTION" ]; do
+        echo ""
+        echo "Select AMI name prefix number:"
+        read AMI_PREFIX_NUM
+        if [[ "$AMI_PREFIX_NUM" =~ ^[0-9]+$ ]] && [ "$AMI_PREFIX_NUM" -ge 1 ] && [ "$AMI_PREFIX_NUM" -le "${#AMI_PREFIXES[@]}" ]; then
+            AMI_NAME_SELECTION="${AMI_PREFIXES[$((AMI_PREFIX_NUM-1))]}"
+            echo "Selected AMI prefix: $AMI_NAME_SELECTION"
+        else
+            echo "ERROR: Invalid selection. Please enter a number between 1 and ${#AMI_PREFIXES[@]}."
+        fi
+    done
+    
+    echo ""
+    echo "Matching AMIs (newest to oldest):"
+    aws ec2 describe-images --owners amazon --region "$REGION" --profile "$PROFILE" --filters "Name=name,Values=${AMI_NAME_SELECTION}*" "Name=architecture,Values=$ARCH_FILTER" --query 'Images | sort_by(@, &CreationDate) | reverse(@)[*].[ImageId,Name,Description]' --output table --color off
+    
+    # Get the latest AMI ID for default selection
+    LATEST_AMI=$(aws ec2 describe-images --owners amazon --region "$REGION" --profile "$PROFILE" --filters "Name=name,Values=${AMI_NAME_SELECTION}*" "Name=architecture,Values=$ARCH_FILTER" --query 'Images | sort_by(@, &CreationDate) | reverse(@)[0].ImageId' --output text --color off)
+fi
+
+while [ -z "$AMI_ID" ]; do
+    if [ -n "$LATEST_AMI" ]; then
+        echo "Enter AMI ID (press enter for latest: $LATEST_AMI):"
+    else
+        echo "Enter AMI ID:"
+    fi
+    read AMI_ID_INPUT
+    if [ -z "$AMI_ID_INPUT" ] && [ -n "$LATEST_AMI" ]; then
+        AMI_ID="$LATEST_AMI"
+        echo "Selected latest AMI: $AMI_ID"
+    elif [ -n "$AMI_ID_INPUT" ]; then
+        AMI_ID="$AMI_ID_INPUT"
+    else
+        echo "ERROR: AMI ID cannot be empty. Please enter a valid AMI ID."
+    fi
+done
+
+# 3. Instance Configuration
+echo ""
+echo "Do you want to see compatible instance types? (y/n):"
+read SHOW_TYPES
+if [ "$SHOW_TYPES" = "y" ]; then
+    echo "Limit to current generation instance types only? (y/n):"
+    read CURRENT_GEN_ONLY
+    
+    echo ""
+    echo "Instance Type Categories:"
+    echo "1. General Purpose (t3, t4g, m5, m6i, m6a, m7i, m7a, a1)"
+    echo "2. Compute Optimized (c5, c6i, c6a, c7i, c7a, c6g, c7g)"
+    echo "3. Memory Optimized (r5, r6i, r6a, r7i, r7a, r6g, r7g, r8g, x1e, x2gd)"
+    echo "4. Storage Optimized (i3, i4i, d2, d3, h1)"
+    echo "5. Accelerated Computing (p3, p4, g4, g5, f1, inf1, inf2)"
+    echo "6. All instance types (Takes longer to display)"
+    echo ""
+    
+    while [ -z "$CATEGORY_CHOICE" ]; do
+        echo "Select category (1-6):"
+        read CATEGORY_CHOICE
+        case $CATEGORY_CHOICE in
+            1) FAMILY_FILTER="Name=instance-type,Values=t3.*,t4g.*,m5.*,m6i.*,m6a.*,m7i.*,m7a.*,m6g.*,m6gd.*,m7g.*,m7gd.*,m8g.*,a1.*" ;;
+            2) FAMILY_FILTER="Name=instance-type,Values=c5.*,c6i.*,c6a.*,c7i.*,c7a.*,c6g.*,c6gd.*,c7g.*,c7gd.*,c8g.*" ;;
+            3) FAMILY_FILTER="Name=instance-type,Values=r5.*,r6i.*,r6a.*,r7i.*,r7a.*,r6g.*,r6gd.*,r7g.*,r7gd.*,r8g.*,r8gd.*,x1e.*,x2gd.*" ;;
+            4) FAMILY_FILTER="Name=instance-type,Values=i3.*,i4i.*,d2.*,d3.*,h1.*" ;;
+            5) FAMILY_FILTER="Name=instance-type,Values=p3.*,p4.*,g4.*,g5.*,f1.*,inf1.*,inf2.*" ;;
+            6) FAMILY_FILTER="" ;;
+            *) echo "ERROR: Invalid selection. Please enter 1-6."; CATEGORY_CHOICE="" ;;
+        esac
+    done
+    aws ec2 describe-images --image-ids "$AMI_ID" --region "$REGION" --profile "$PROFILE" --query 'Images[0].PlatformDetails' --output text --color off > /tmp/platform_details
+    PLATFORM=$(cat /tmp/platform_details)
+    if [[ "$PLATFORM" == *"Windows"* ]]; then
+        BASE_FILTERS="Name=processor-info.supported-architecture,Values=$ARCH_FILTER Name=instance-type,Values=*.large,*.xlarge,*.2xlarge,*.4xlarge,*.8xlarge,*.12xlarge,*.16xlarge,*.24xlarge"
+        OS_FILTER="Windows"
+    elif [[ "$PLATFORM" == *"Red Hat"* ]] || [[ "$AMI_ID" == *"RHEL"* ]]; then
+        BASE_FILTERS="Name=processor-info.supported-architecture,Values=$ARCH_FILTER"
+        OS_FILTER="Red Hat Enterprise Linux with HA"
+    else
+        BASE_FILTERS="Name=processor-info.supported-architecture,Values=$ARCH_FILTER"
+        OS_FILTER="Linux"
+    fi
+    
+    if [ -n "$FAMILY_FILTER" ]; then
+        ALL_FILTERS="$BASE_FILTERS $FAMILY_FILTER"
+    else
+        ALL_FILTERS="$BASE_FILTERS"
+    fi
+    
+    # Get instance types with details
+    if [ "$CURRENT_GEN_ONLY" = "y" ]; then
+        INSTANCE_DATA=$(aws ec2 describe-instance-types --region "$REGION" --profile "$PROFILE" --filters $ALL_FILTERS "Name=current-generation,Values=true" --query 'InstanceTypes | sort_by(@, &NetworkInfo.NetworkPerformance) | sort_by(@, &(InstanceStorageInfo.TotalSizeInGB || `0`)) | sort_by(@, &VCpuInfo.DefaultVCpus) | sort_by(@, &MemoryInfo.SizeInMiB)[*].[InstanceType,VCpuInfo.DefaultVCpus,MemoryInfo.SizeInMiB,NetworkInfo.NetworkPerformance,InstanceStorageInfo.TotalSizeInGB]' --output json --color off)
+    else
+        INSTANCE_DATA=$(aws ec2 describe-instance-types --region "$REGION" --profile "$PROFILE" --filters $ALL_FILTERS --query 'InstanceTypes | sort_by(@, &NetworkInfo.NetworkPerformance) | sort_by(@, &(InstanceStorageInfo.TotalSizeInGB || `0`)) | sort_by(@, &VCpuInfo.DefaultVCpus) | sort_by(@, &MemoryInfo.SizeInMiB)[*].[InstanceType,VCpuInfo.DefaultVCpus,MemoryInfo.SizeInMiB,NetworkInfo.NetworkPerformance,InstanceStorageInfo.TotalSizeInGB]' --output json --color off)
+    fi
+    
+    # Filter to only show instance types available in current region
+    AVAILABLE_INSTANCES=$(aws ec2 describe-instance-type-offerings --location-type region --filters "Name=location,Values=$REGION" --region "$REGION" --profile "$PROFILE" --query 'InstanceTypeOfferings[*].InstanceType' --output json --color off)
+    
+    FILTERED_DATA=$(echo "$INSTANCE_DATA" | jq --argjson available "$AVAILABLE_INSTANCES" '[.[] | select(.[0] as $type | $available | index($type))]')
+    
+    echo ""
+    echo "Please wait. The pricing API is s...l...o...w"
+    echo ""
+    
+    echo "+------------------+-------+--------------+----------------------+-------------+------------+"
+    echo "| Instance Type    | vCPUs | Memory (MiB) | Network              | Storage     | Price/Hour |"
+    echo "|------------------|-------|--------------|----------------------|-------------|------------|"
+    
+    echo "$FILTERED_DATA" | jq -r '.[] | @tsv' | while IFS=$'\t' read -r instance_type vcpus memory network storage; do
+        # Determine storage type
+        if [ "$storage" = "null" ] || [ -z "$storage" ]; then
+            STORAGE_TYPE="EBS-only"
+        else
+            STORAGE_TYPE="${storage}GB NVMe"
+        fi
+        
+        # Try multiple pricing queries for better coverage
+        PRICE="N/A"
+        
+        # Try with Linux first
+        if [ "$PRICE" = "N/A" ]; then
+            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$instance_type" "Type=TERM_MATCH,Field=operatingSystem,Value=Linux" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
+            if [ -n "$PRICE_DATA" ] && [ "$PRICE_DATA" != "null" ]; then
+                PRICE_RAW=$(echo "$PRICE_DATA" | jq -r '.PriceList[0] | fromjson | .terms.OnDemand | to_entries[0].value.priceDimensions | to_entries[0].value.pricePerUnit.USD' 2>/dev/null || echo "N/A")
+                if [ "$PRICE_RAW" != "N/A" ] && [ "$PRICE_RAW" != "null" ] && [ -n "$PRICE_RAW" ] && [ "$PRICE_RAW" != "0.0000000000" ] && [ "$PRICE_RAW" != "0" ]; then
+                    PRICE=$(printf "%.4f" "$PRICE_RAW")
+                fi
+            fi
+        fi
+        
+        # Try with original OS filter if Linux didn't work
+        if [ "$PRICE" = "N/A" ] && [ "$OS_FILTER" != "Linux" ]; then
+            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$instance_type" "Type=TERM_MATCH,Field=operatingSystem,Value=$OS_FILTER" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
+            if [ -n "$PRICE_DATA" ] && [ "$PRICE_DATA" != "null" ]; then
+                PRICE_RAW=$(echo "$PRICE_DATA" | jq -r '.PriceList[0] | fromjson | .terms.OnDemand | to_entries[0].value.priceDimensions | to_entries[0].value.pricePerUnit.USD' 2>/dev/null || echo "N/A")
+                if [ "$PRICE_RAW" != "N/A" ] && [ "$PRICE_RAW" != "null" ] && [ -n "$PRICE_RAW" ] && [ "$PRICE_RAW" != "0.0000000000" ] && [ "$PRICE_RAW" != "0" ]; then
+                    PRICE=$(printf "%.4f" "$PRICE_RAW")
+                fi
+            fi
+        fi
+        
+        printf "| %-16s | %-5s | %-12s | %-20s | %-11s | %-10s |\n" "$instance_type" "$vcpus" "$memory" "$network" "$STORAGE_TYPE" "$PRICE"
+    done
+    
+    echo "+------------------+-------+--------------+----------------------+-------------+------------+"
+    
+    echo "Sort by price...it takes a while...? (y/n):"
+    read SORT_BY_PRICE
+    if [ "$SORT_BY_PRICE" = "y" ]; then
+        echo ""
+        echo "Sorting by price (lowest to highest)..."
+        echo ""
+        echo "+------------------+-------+--------------+----------------------+-------------+------------+"
+        echo "| Instance Type    | vCPUs | Memory (MiB) | Network              | Storage     | Price/Hour |"
+        echo "|------------------|-------|--------------|----------------------|-------------|------------|"
+        
+        # Create temporary file with pricing data
+        TEMP_PRICE_FILE="/tmp/instance_pricing_$$"
+        echo "$FILTERED_DATA" | jq -r '.[] | @tsv' | while IFS=$'\t' read -r instance_type vcpus memory network storage; do
+            # Determine storage type
+            if [ "$storage" = "null" ] || [ -z "$storage" ]; then
+                STORAGE_TYPE="EBS-only"
+            else
+                STORAGE_TYPE="${storage}GB NVMe"
+            fi
+            
+            # Get pricing
+            PRICE="N/A"
+            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$instance_type" "Type=TERM_MATCH,Field=operatingSystem,Value=Linux" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
+            if [ -n "$PRICE_DATA" ] && [ "$PRICE_DATA" != "null" ]; then
+                PRICE_RAW=$(echo "$PRICE_DATA" | jq -r '.PriceList[0] | fromjson | .terms.OnDemand | to_entries[0].value.priceDimensions | to_entries[0].value.pricePerUnit.USD' 2>/dev/null || echo "N/A")
+                if [ "$PRICE_RAW" != "N/A" ] && [ "$PRICE_RAW" != "null" ] && [ -n "$PRICE_RAW" ] && [ "$PRICE_RAW" != "0.0000000000" ] && [ "$PRICE_RAW" != "0" ]; then
+                    PRICE=$(printf "%.4f" "$PRICE_RAW")
+                fi
+            fi
+            
+            # Convert N/A to 999999 for sorting, then back to N/A for display
+            SORT_PRICE="$PRICE"
+            if [ "$PRICE" = "N/A" ]; then
+                SORT_PRICE="999999"
+            fi
+            
+            echo "$SORT_PRICE|$instance_type|$vcpus|$memory|$network|$STORAGE_TYPE|$PRICE" >> "$TEMP_PRICE_FILE"
+        done
+        
+        # Sort by price and display
+        sort -t'|' -k1,1n "$TEMP_PRICE_FILE" | while IFS='|' read -r sort_price instance_type vcpus memory network storage_type display_price; do
+            printf "| %-16s | %-5s | %-12s | %-20s | %-11s | %-10s |\n" "$instance_type" "$vcpus" "$memory" "$network" "$storage_type" "$display_price"
+        done
+        
+        rm -f "$TEMP_PRICE_FILE"
+        echo "+------------------+-------+--------------+----------------------+-------------+------------+"
+    fi
+    
+    rm -f /tmp/platform_details
+fi
+
+while [ -z "$INSTANCE_TYPE" ]; do
+    echo ""
+    echo "Enter instance type:"
+    read INSTANCE_TYPE
+    if [ -z "$INSTANCE_TYPE" ]; then
+        echo "ERROR: Instance type cannot be empty. Please enter a valid instance type."
+    fi
+done
+
+echo ""
+echo "Available user data scripts:"
+ls -1 user_data_scripts/
+
+USER_DATA_SCRIPTS=()
+while true; do
+    echo ""
+    echo "Enter user data script file name (or press enter to finish):"
+    read SCRIPT_NAME
+    if [ -z "$SCRIPT_NAME" ]; then
+        break
+    fi
+    if [ -f "user_data_scripts/$SCRIPT_NAME" ]; then
+        USER_DATA_SCRIPTS+=("$SCRIPT_NAME")
+    else
+        echo "ERROR: Script file does not exist."
+    fi
+done
+
+USER_DATA_FILE="/tmp/userdata_$(date +%s).sh"
+echo "#!/bin/bash" > "$USER_DATA_FILE"
+for script in "${USER_DATA_SCRIPTS[@]}"; do
+    cat "user_data_scripts/$script" >> "$USER_DATA_FILE"
+done
+
+# Replace placeholders
+while grep -q "{{prompt:" "$USER_DATA_FILE"; do
+    PLACEHOLDER=$(grep -o "{{prompt:[^}]*}}" "$USER_DATA_FILE" | head -1)
+    PROMPT_TEXT=$(echo "$PLACEHOLDER" | sed 's/{{prompt:\s*//' | sed 's/}}//')
+    echo ""
+    echo "Enter value for $PROMPT_TEXT:"
+    read PLACEHOLDER_VALUE
+    sed -i "s|$PLACEHOLDER|$PLACEHOLDER_VALUE|g" "$USER_DATA_FILE"
+done
+
+# 4. Security & Network Setup
+echo "Available KMS keys:"
+echo "+------------------------------------------------------------------------------+------------------------------+"
+echo "| ARN                                                                          | Alias                        |"
+echo "|------------------------------------------------------------------------------|------------------------------|"
+
+# Get all aliases first
+ALIASES_DATA=$(aws kms list-aliases --region "$REGION" --profile "$KMS_PROFILE" --query 'Aliases[?starts_with(AliasName, `alias/`) && TargetKeyId != null].[TargetKeyId,AliasName]' --output text)
+
+# Get all keys and process in parallel
+aws kms list-keys --region "$REGION" --profile "$KMS_PROFILE" --query 'Keys[*].KeyId' --output text | tr '\t' '\n' | xargs -P 5 -I {} bash -c '
+    if [ -n "{}" ]; then
+        KEY_INFO=$(aws kms describe-key --region "'"$REGION"'" --profile "'"$KMS_PROFILE"'" --key-id {} --query "[KeyMetadata.Arn,KeyMetadata.KeyManager]" --output text 2>/dev/null)
+        KEY_MANAGER=$(echo "$KEY_INFO" | cut -f2)
+        if [ "$KEY_MANAGER" = "CUSTOMER" ]; then
+            ARN=$(echo "$KEY_INFO" | cut -f1)
+            ALIAS=$(echo "'"$ALIASES_DATA"'" | grep "^{}" | cut -f2 | sed "s/^alias\///" | head -1)
+            [ -z "$ALIAS" ] && ALIAS="N/A"
+            printf "| %-76s | %-28s |\n" "$ARN" "$ALIAS"
+        fi
+    fi
+'
+
+echo "+------------------------------------------------------------------------------+------------------------------+"
+
+while [ -z "$KEY_ARN" ]; do
+    echo ""
+    echo "Enter KMS key ARN:"
+    read KEY_ARN
+    if [ -z "$KEY_ARN" ]; then
+        echo "ERROR: KMS key ARN cannot be empty."
+    fi
+done
+
+echo ""
+echo "Available EC2 key pairs:"
+aws ec2 describe-key-pairs --region "$REGION" --profile "$PROFILE" --query 'KeyPairs[*].KeyName' --output table --color off
+
+echo ""
+echo "Create new EC2 key pair? (y/n):"
+read CREATE_KEY
+if [ "$CREATE_KEY" = "y" ]; then
+    while [ -z "$KEY_NAME" ]; do
+        echo "Enter key pair name:"
+        read KEY_NAME
+        if [ -z "$KEY_NAME" ]; then
+            echo "ERROR: Key pair name cannot be empty."
+        fi
+    done
+    
+    while [ -z "$KMS_KEY_ARN" ]; do
+        echo "Enter KMS key ARN to encrypt the key:"
+        read KMS_KEY_ARN
+        if [ -z "$KMS_KEY_ARN" ]; then
+            echo "ERROR: KMS key ARN cannot be empty."
+        fi
+    done
+    
+    KEY_MATERIAL=$(aws ec2 create-key-pair --key-name "$KEY_NAME" --region "$REGION" --profile "$PROFILE" --query 'KeyMaterial' --output text)
+    aws secretsmanager create-secret --name "ec2-key-pair-$KEY_NAME" --secret-string "$KEY_MATERIAL" --kms-key-id "$KMS_KEY_ARN" --region "$REGION" --profile "$KMS_PROFILE"
+else
+    while [ -z "$KEY_NAME" ]; do
+        echo ""
+        echo "Enter existing key pair name:"
+        read KEY_NAME
+        if [ -z "$KEY_NAME" ]; then
+            echo "ERROR: Key pair name cannot be empty."
+        fi
+    done
+fi
+
+echo ""
+echo "Available VPCs:"
+aws ec2 describe-vpcs --region "$REGION" --profile "$PROFILE" --query 'Vpcs[*].[VpcId,Tags[?Key==`Name`].Value|[0]]' --output table --color off
+
+while [ -z "$VPC_ID" ]; do
+    echo ""
+    echo "Enter VPC ID:"
+    read VPC_ID
+    if [ -z "$VPC_ID" ]; then
+        echo "ERROR: VPC ID cannot be empty."
+    fi
+done
+
+echo ""
+echo "Available security groups:"
+aws ec2 describe-security-groups --region "$REGION" --profile "$PROFILE" --filters "Name=vpc-id,Values=$VPC_ID" --query 'SecurityGroups[*].[GroupId,GroupName,Description]' --output table --color off
+
+while [ -z "$SECURITY_GROUP_ID" ]; do
+    echo ""
+    echo "Enter security group ID:"
+    read SECURITY_GROUP_ID
+    if [ -z "$SECURITY_GROUP_ID" ]; then
+        echo "ERROR: Security group ID cannot be empty."
+    fi
+done
+
+echo ""
+echo "Available subnets:"
+aws ec2 describe-subnets --region "$REGION" --profile "$PROFILE" --filters "Name=vpc-id,Values=$VPC_ID" --query 'Subnets[*].[SubnetId,AvailabilityZone,Tags[?Key==`Name`].Value|[0]]' --output table --color off
+
+while [ -z "$SUBNET_ID" ]; do
+    echo ""
+    echo "Enter subnet ID:"
+    read SUBNET_ID
+    if [ -z "$SUBNET_ID" ]; then
+        echo "ERROR: Subnet ID cannot be empty."
+    fi
+done
+
+# 5. Launch & Display
+block_device_mappings='[{"DeviceName": "/dev/xvda","Ebs": {"Encrypted": true, "KmsKeyId": "'$KEY_ARN'"}}]'
+echo "block_device_mappings: $block_device_mappings"
+
+echo "Launching instance..."
+INSTANCE_ID=$(aws ec2 run-instances \
+    --image-id "$AMI_ID" \
+    --instance-type "$INSTANCE_TYPE" \
+    --key-name "$KEY_NAME" \
+    --security-group-ids "$SECURITY_GROUP_ID" \
+    --subnet-id "$SUBNET_ID" \
+    --user-data "file://$USER_DATA_FILE" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=create-ami-$AMI_NAME_WITH_TIMESTAMP}]" \
+    --block-device-mappings "$block_device_mappings" \
+    --region "$REGION" \
+    --profile "$PROFILE" \
+    --query 'Instances[0].InstanceId' \
+    --output text)
+
+echo "Instance launched: $INSTANCE_ID"
+echo "Waiting for instance to be running..."
+aws ec2 wait instance-running --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
+echo "Instance is now running."
+
+echo "Stopping the instance..."
+aws ec2 stop-instances --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
+
+echo "Waiting for instance to stop..."
+aws ec2 wait instance-stopped --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
+
+echo "Creating AMI: $AMI_NAME_WITH_TIMESTAMP"
+NEW_AMI=$(aws ec2 create-image \
+    --instance-id "$INSTANCE_ID" \
+    --name "$AMI_NAME_WITH_TIMESTAMP" \
+    --description "AMI created from instance $INSTANCE_ID" \
+    --tag-specifications "ResourceType=image,Tags=[{Key=Name,Value=$AMI_NAME_WITH_TIMESTAMP}]" \
+    --region "$REGION" \
+    --profile "$PROFILE" \
+    --query 'ImageId' \
+    --output text)
+
+echo "AMI created: $NEW_AMI"
+
+aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
+
+# Cleanup
+rm -f "$USER_DATA_FILE"
