@@ -2,13 +2,12 @@
 
 __Summmary:__
 
-This repository ccontains a script to create AWS Secrets Mangager secrets. One secret is used to configure AWS CLI Profiles. 
-The other is used to store a user name and GitHub personal accesss token to execute GitHub commands. To simplify deployment this script presumes the user is executing it in the region
+This repository ccontains a script to create AWS Secrets Mangager secrets. One secret is used to configure AWS CLI Profiles. The other is used to store a user name and GitHub personal accesss token to execute GitHub commands. To simplify deployment this script presumes the user is executing it in the region
 where the secret should be created and the user has permission to use the KMS key used to encrypt the secrets.
 
 __Steps to create the script__
 
-1. Create a bash script to run on Amazon Linux and add a shebang at that top.
+1. Create a bash script to run on Amazon Linux and add a shebang at that top named run.sh
 
 2. Add the following variables at the top and set to empty string. ENVIRONMENT, USERNAME, USER_ACCOUNT_NUMBER, ACCESS_KEY_ID, SECRET_KEY, GITHUB_USER_NAME, GITHUB_PAT)
 
