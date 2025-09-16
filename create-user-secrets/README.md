@@ -36,3 +36,5 @@ __Steps to create the script__
 {"gh_username":"$GITHUB_USER_NAME","gh_pat":"$GITHUB_PAT"}
 
 13. Echo to the screen that the script is complete.
+
+[ TODO: Add a policy to the secrets ]
