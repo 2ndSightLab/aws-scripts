@@ -9,7 +9,8 @@ __Context__
 * Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
 * Must follow all script standards in https://github.com/2ndSightLab/aws-scripts/blob/main/scripts/README.md
   
-## Implementation
+__Implementation__
+
 - Check if $PROFILE variable is set, if not prompt user to enter it
 - If user was prompted for profile, validate it exists using `aws sts get-caller-identity`
 - Prompt for role profile name
@@ -21,7 +22,7 @@ __Context__
 - Configure role profile with role_arn, mfa_serial, external_id (if provided), region, output, and source_profile
 - Test role assumption with new profile
 
-## Variables
+__Variables__
 - PROFILE - existing AWS CLI profile name (source_profile)
 - ROLE_PROFILE - name for new role assumption profile
 - ROLE_ARN - ARN of the role to assume
@@ -30,7 +31,7 @@ __Context__
 - REGION - AWS region (e.g. us-east-1)
 - OUTPUT - output format (e.g. json or text)
 
-## Error Handling
+__Error Handling__
 - Check if PROFILE variable is set
 - Verify source profile exists and is valid (only if user was prompted)
 - Validate role ARN format
