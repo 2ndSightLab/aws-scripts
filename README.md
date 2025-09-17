@@ -25,6 +25,7 @@ __Scripts folder__
 __Functions__
 
 * ONLY create bash functions in a script in one of the functions directory, not the root directory or any other directory.
+* When creating, copying or moving functions do not change any code in the function. Only change the code scripts that use the function to propertly source the file and reerence the correct function name.
 * A folder named /functions in the root of this repository contains bash functions used by these scripts.
 * If a script uses funcitons, a /functions folder exists within the folder for that script.
 * Each function name is lower case with words separated by an underscore: _
