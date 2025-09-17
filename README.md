@@ -85,7 +85,6 @@ __AWS Policies__
 __AWS Services__
 
 * When creating a list of AWS services create a function and use this command: grep "AVAILABLE SERVI" -A1900 | grep o | cut -d " " -f9- | grep -v 'aws help topics'
-* Once the function is creeated delete the __AWS Service section of the readme and add the function to the Functions Description list and description.
 
 __Security__
 
