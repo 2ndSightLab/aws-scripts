@@ -10,3 +10,8 @@ Enter the profile you want to use to query the events, the region, and the numbe
 Remember that there when querying AWS CloudTrail so you might need to wait a few minutes for the events to show up depending on your CloudTrail configuration. 
 
 This query currently only looks at wahtever the cloudtrail lookup-events command returns. 
+
+__Context__
+
+* Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
+* Msut follow all script standards in https://github.com/2ndSightLab/aws-scripts/blob/main/scripts/README.md
