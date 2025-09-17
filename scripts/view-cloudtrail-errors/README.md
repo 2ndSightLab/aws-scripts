@@ -1,4 +1,7 @@
 # view-cloudtrail-errors
+
+__Summary__
+
 View all the errors using an AWS CLI profile for the last X minutes
 
 I don't know why AWS does not make it easier to view errors in the AWS Console. I would like to be able to filter the AWS CloudTrail event history for records with errors.
@@ -14,4 +17,4 @@ This query currently only looks at wahtever the cloudtrail lookup-events command
 __Context__
 
 * Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
-* Msut follow all script standards in https://github.com/2ndSightLab/aws-scripts/blob/main/scripts/README.md
+* Must follow all script standards in https://github.com/2ndSightLab/aws-scripts/blob/main/scripts/README.md
