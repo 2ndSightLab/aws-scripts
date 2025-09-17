@@ -15,6 +15,7 @@ __Global Context__
 * If a script-specifc README.md in the script folder for that script conflicts, this file takes precedence.
 * If there is a conflict, the user is notified when generating the script.
 * Never remove any existing code that is unrelated to the specific request.
+* Always ask for permission before making ANY code change.
 
 __Scripts folder__
 
