@@ -1,11 +1,12 @@
 # Deploy EC2 AMI Script
 
-## Purpose
+__Summary__
 Create a bash script that deploys an EC2 instance from an AMI with comprehensive selection options.
 
-## Requirements
-- Script name: run.sh
-- Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
+__Context__
+* Script name: run.sh
+* Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
+* Must follow all script standards in https://github.com/2ndSightLab/aws-scripts/blob/main/scripts/README.md
 
 ## Implementation Flow
 
