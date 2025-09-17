@@ -12,11 +12,6 @@ __Context__
 * Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
 * Must follow all script standards in https://github.com/2ndSightLab/aws-scripts/blob/main/scripts/README.md
 
-## Requirements
-- Script name: `run.sh`
-- Based on: https://github.com/2ndSightLab/aws-cli-profile/blob/main/create-aws-cli-profile-simple.sh
-- Must follow all repository standards from main README.md
-
 ## Implementation
 - Prompt user for profile name
 - Prompt user for AWS access key ID
