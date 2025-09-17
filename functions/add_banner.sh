@@ -6,7 +6,7 @@
 #  File: add_banner.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Add banner to bash script files according to README.md format
+#  Add banner to bash script files
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
