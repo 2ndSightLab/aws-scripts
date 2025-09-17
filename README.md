@@ -6,6 +6,7 @@ This repository contains bash scripts to do whatever is required on AWS.
 
 __Global Context__
 
+* Follow the instructions in this README for EVERY change.
 * All scripts adhere to the requirements in this README.md.
 * If a script-specifc README.md in the script folder for that script conflicts, this file takes precedence.
 * If there is a conflict, the user is notified when generating the script.
