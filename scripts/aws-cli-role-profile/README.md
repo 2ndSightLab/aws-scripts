@@ -1,12 +1,9 @@
 # AWS CLI Role Profile Script
 
-## Purpose
-Create a bash script that sets up AWS CLI profiles for role assumption using an existing profile as the source.
+__Summary__
+Create a bash script that sets up AWS CLI profiles for role assumption using an existing profile as the source profile. Use the script in this directory to configure the source profile: 
+https://github.com/2ndSightLab/aws-scripts/tree/main/scripts/aws-cli-source-profile
 
-## Requirements
-- Script name: `run.sh`
-- Uses existing profile as source_profile for role assumption
-- Must follow all repository standards from main README.md
 
 ## Implementation
 - Check if $PROFILE variable is set, if not prompt user to enter it
