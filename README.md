@@ -17,6 +17,7 @@ __Scripts folder__
 
 __Functions__
 
+* There can be (if needed) a functions folder within each script folder
 * The functions folder contains bash functions.
 * File names match function names plus a .sh extension.
 * Before writing new code check to see if a function exists that can be used insted.
