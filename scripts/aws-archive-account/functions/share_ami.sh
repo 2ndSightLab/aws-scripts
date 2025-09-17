@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Archive IAM Users
+#  Name: Share AMI
 #  GitHub repository: https://github.com/2ndSightLab
-#  File: iam-users.sh
+#  File: share_ami.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Archive IAM users
+#  Share AMI with another account
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -20,22 +20,16 @@
 # 
 ################################################################
 
+share_ami(){
+  local AMI_ID="$1"
+  local to_account="$2"
+  local archive_from="$3"
+  local region="$4"
 
-
-cat <<'END_TEXT'
-
-***************************
-IAM Users 
-***************************
-
-You may want a record of the IAM user names in this account
-in case they appear in any logs or you need to replicate
-them again later. Here are a list of the IAM users in this account:
-
-END_TEXT
-
-aws iam list-users --profile $ARCHIVE_FROM --region $REGION --query "Users[].UserName" --output text \
-  | xargs -n 1
-
-read -p "Copy the names of the roles into a parameter or secret if needed. \
-  Enter to continue. Ctrl-C to exit" OK
+  echo "Share ami: $AMI_ID"
+  
+  aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=$to_account}]" \
+           --profile $archive_from --region $region --color off
+  echo "Shared the AMI."
+  echo "Status is pending...."
+}

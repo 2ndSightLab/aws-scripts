@@ -23,40 +23,40 @@
 
 
 archive_parameter(){
- local from_parameter="$1"
- local to_parameter="$2"
- local archive_from="$3"
- local archive_to="$4"
- local region="$5"
- local kms_key_id="$6"
+ local FROM_PARAMETER="$1"
+ local TO_PARAMETER="$2"
+ local ARCHIVE_FROM="$3"
+ local ARCHIVE_TO="$4"
+ local REGION="$5"
+ local KMS_KEY_ID="$6"
 
  local PARAMETER_VALUE=""
 
  PARAMETER_VALUE=$(aws ssm get-parameter \
-    --profile "$archive_from" \
-    --region "$region" \
-    --name "$from_parameter" \
+    --profile "$ARCHIVE_FROM" \
+    --region "$REGION" \
+    --name "$FROM_PARAMETER" \
     --with-decryption \
     --query 'Parameter.Value' \
     --output text)
    
     if [ -z "$PARAMETER_VALUE" ]; then
         echo "Error: Parameter value could not be retrieved or is empty."
-        echo "Does the AWS CLI Profile: $archive_from have permission to decrypt the parameter?"
+        echo "Does the AWS CLI Profile: $ARCHIVE_FROM have permission to decrypt the parameter?"
         exit 1
     fi
 
     aws ssm put-parameter \
-    --profile "$archive_to" \
-    --region "$region" \
-    --name "$to_parameter" \
+    --profile "$ARCHIVE_TO" \
+    --region "$REGION" \
+    --name "$TO_PARAMETER" \
     --value "$PARAMETER_VALUE" \
-    --key-id "$kms_key_id" \
+    --key-id "$KMS_KEY_ID" \
     --overwrite \
     --type "SecureString"
 
     if [ $? -ne 0 ]; then
-      echo "Error: Failed to create parameter $to_parameter"
+      echo "Error: Failed to create parameter $TO_PARAMETER"
       exit 1
     fi
 
@@ -71,8 +71,8 @@ SSM Secrets
 
 END_TEXT
 
-read -p "Would you like to copy any parameters? (y): " copy
-if [ "$copy" == "y" ]; then 
+read -p "Would you like to copy any parameters? (y): " COPY
+if [ "$COPY" == "y" ]; then 
 
 cat <<'END_TEXT'
 
@@ -89,54 +89,54 @@ echo ""
 aws ssm describe-parameters \
     --query 'Parameters[*].{Name:Name,KmsKeyId:KeyId}' \
     --output json \
-    --profile $archive_from \
-    --region $region | jq -r '.[] | [.Name, .KmsKeyId] | @tsv'
+    --profile $ARCHIVE_FROM \
+    --region $REGION | jq -r '.[] | [.Name, .KmsKeyId] | @tsv'
 
 echo ""
-from_parameter="all"
+FROM_PARAMETER="all"
 echo ""
 echo "Key ARNs and Aliases (one command for all this data: #awswishlist):"
 echo ""
 
-aws kms list-aliases --profile $kms_profile --region $region \
-    | jq -r --arg region "$region" \
-    --arg accountid "$(aws sts get-caller-identity --profile $kms_profile --query Account --output text)" \
+aws kms list-aliases --profile $KMS_PROFILE --region $REGION \
+    | jq -r --arg region "$REGION" \
+    --arg accountid "$(aws sts get-caller-identity --profile $KMS_PROFILE --query Account --output text)" \
     '.Aliases[] | select(.TargetKeyId) | "arn:aws:kms:" + $region + ":" + $accountid + ":key/" + .TargetKeyId + " " + .AliasName'
 
-read -p "Enter KMS key ARN (only, not alias) to use to encrypt parameters in target account: " new_key_id
+read -p "Enter KMS key ARN (only, not alias) to use to encrypt parameters in target account: " NEW_KEY_ID
 
-while [[ -n $from_parameter ]]; do
-   read -p "Enter the parameter name you want to archive or all. Enter to continue: " from_parameter
-   if [[ -n $from_parameter ]]; then
-     if [ "$from_parameter" == "all" ]; then
+while [[ -n $FROM_PARAMETER ]]; do
+   read -p "Enter the parameter name you want to archive or all. Enter to continue: " FROM_PARAMETER
+   if [[ -n $FROM_PARAMETER ]]; then
+     if [ "$FROM_PARAMETER" == "all" ]; then
 
          PARAMETERS=$(aws ssm describe-parameters --query 'Parameters[].Name' --output text \
-            --profile $archive_from --region $region | tr '\t' '\n')
+            --profile $ARCHIVE_FROM --region $REGION | tr '\t' '\n')
 
-         for from_parameter in $PARAMETERS; do
-           to_account=$(aws sts get-caller-identity --query Account --output text --profile $archive_from)
-           to_parameter='/archive/'$to_account''$from_parameter
+         for FROM_PARAMETER in $PARAMETERS; do
+           TO_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile $ARCHIVE_FROM)
+           TO_PARAMETER='/archive/'$TO_ACCOUNT''$FROM_PARAMETER
 
-           echo "from_parameter: $from_parameter"
-           echo "to_parameter: $to_parameter"
-           echo "archive_from: $archive_from"
-           echo "archive_to: $archive_to"
-           echo "region: $region"
-           echo "new_key_id: $new_key_id"
+           echo "FROM_PARAMETER: $FROM_PARAMETER"
+           echo "TO_PARAMETER: $TO_PARAMETER"
+           echo "ARCHIVE_FROM: $ARCHIVE_FROM"
+           echo "ARCHIVE_TO: $ARCHIVE_TO"
+           echo "REGION: $REGION"
+           echo "NEW_KEY_ID: $NEW_KEY_ID"
 
-           if [[ -z "$from_parameter" ]]; then echo "from_parameter is not set"; exit 1; fi
-           if [[ -z "$to_parameter" ]]; then echo "from_parameter is not set"; exit 1; fi
-           if [[ -z "$archive_from" ]]; then echo "from_parameter is not set"; exit 1; fi
-           if [[ -z "$archive_to" ]]; then echo "from_parameter is not set"; exit 1; fi
-           if [[ -z "$region" ]]; then echo "from_parameter is not set"; exit 1; fi
-           if [[ -z "$new_key_id" ]]; then echo "new_key_id is not set"; exit 1; fi
+           if [[ -z "$FROM_PARAMETER" ]]; then echo "FROM_PARAMETER is not set"; exit 1; fi
+           if [[ -z "$TO_PARAMETER" ]]; then echo "TO_PARAMETER is not set"; exit 1; fi
+           if [[ -z "$ARCHIVE_FROM" ]]; then echo "ARCHIVE_FROM is not set"; exit 1; fi
+           if [[ -z "$ARCHIVE_TO" ]]; then echo "ARCHIVE_TO is not set"; exit 1; fi
+           if [[ -z "$REGION" ]]; then echo "REGION is not set"; exit 1; fi
+           if [[ -z "$NEW_KEY_ID" ]]; then echo "NEW_KEY_ID is not set"; exit 1; fi
 
-           archive_parameter "$from_parameter" "$to_parameter" "$archive_from" "$archive_to" "$region" "$new_key_id"
+           archive_parameter "$FROM_PARAMETER" "$TO_PARAMETER" "$ARCHIVE_FROM" "$ARCHIVE_TO" "$REGION" "$NEW_KEY_ID"
          done
-         from_parameter=""
+         FROM_PARAMETER=""
      else
-       read -p "Enter the parameter name in the destination account:" to_parameter
-       archive_parameter $from_parameter $to_parameter $archive_from $archive_to $region $new_key_id
+       read -p "Enter the parameter name in the destination account:" TO_PARAMETER
+       archive_parameter $FROM_PARAMETER $TO_PARAMETER $ARCHIVE_FROM $ARCHIVE_TO $REGION $NEW_KEY_ID
     fi
   fi
 
@@ -144,5 +144,5 @@ done
 
 
 fi #end if copy
-copy=""
+COPY=""
 

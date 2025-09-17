@@ -266,12 +266,12 @@ if [ "$SHOW_TYPES" = "y" ]; then
     echo "| Instance Type    | vCPUs | Memory (MiB) | Network              | Storage     | Price/Hour |"
     echo "|------------------|-------|--------------|----------------------|-------------|------------|"
     
-    echo "$FILTERED_DATA" | jq -r '.[] | @tsv' | while IFS=$'\t' read -r instance_type vcpus memory network storage; do
+    echo "$FILTERED_DATA" | jq -r '.[] | @tsv' | while IFS=$'\t' read -r INSTANCE_TYPE VCPUS MEMORY NETWORK STORAGE; do
         # Determine storage type
-        if [ "$storage" = "null" ] || [ -z "$storage" ]; then
+        if [ "$STORAGE" = "null" ] || [ -z "$STORAGE" ]; then
             STORAGE_TYPE="EBS-only"
         else
-            STORAGE_TYPE="${storage}GB NVMe"
+            STORAGE_TYPE="${STORAGE}GB NVMe"
         fi
         
         # Try multiple pricing queries for better coverage
@@ -279,7 +279,7 @@ if [ "$SHOW_TYPES" = "y" ]; then
         
         # Try with Linux first
         if [ "$PRICE" = "N/A" ]; then
-            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$instance_type" "Type=TERM_MATCH,Field=operatingSystem,Value=Linux" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
+            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$INSTANCE_TYPE" "Type=TERM_MATCH,Field=operatingSystem,Value=Linux" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
             if [ -n "$PRICE_DATA" ] && [ "$PRICE_DATA" != "null" ]; then
                 PRICE_RAW=$(echo "$PRICE_DATA" | jq -r '.PriceList[0] | fromjson | .terms.OnDemand | to_entries[0].value.priceDimensions | to_entries[0].value.pricePerUnit.USD' 2>/dev/null || echo "N/A")
                 if [ "$PRICE_RAW" != "N/A" ] && [ "$PRICE_RAW" != "null" ] && [ -n "$PRICE_RAW" ] && [ "$PRICE_RAW" != "0.0000000000" ] && [ "$PRICE_RAW" != "0" ]; then
@@ -290,7 +290,7 @@ if [ "$SHOW_TYPES" = "y" ]; then
         
         # Try with original OS filter if Linux didn't work
         if [ "$PRICE" = "N/A" ] && [ "$OS_FILTER" != "Linux" ]; then
-            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$instance_type" "Type=TERM_MATCH,Field=operatingSystem,Value=$OS_FILTER" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
+            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$INSTANCE_TYPE" "Type=TERM_MATCH,Field=operatingSystem,Value=$OS_FILTER" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
             if [ -n "$PRICE_DATA" ] && [ "$PRICE_DATA" != "null" ]; then
                 PRICE_RAW=$(echo "$PRICE_DATA" | jq -r '.PriceList[0] | fromjson | .terms.OnDemand | to_entries[0].value.priceDimensions | to_entries[0].value.pricePerUnit.USD' 2>/dev/null || echo "N/A")
                 if [ "$PRICE_RAW" != "N/A" ] && [ "$PRICE_RAW" != "null" ] && [ -n "$PRICE_RAW" ] && [ "$PRICE_RAW" != "0.0000000000" ] && [ "$PRICE_RAW" != "0" ]; then
@@ -299,7 +299,7 @@ if [ "$SHOW_TYPES" = "y" ]; then
             fi
         fi
         
-        printf "| %-16s | %-5s | %-12s | %-20s | %-11s | %-10s |\n" "$instance_type" "$vcpus" "$memory" "$network" "$STORAGE_TYPE" "$PRICE"
+        printf "| %-16s | %-5s | %-12s | %-20s | %-11s | %-10s |\n" "$INSTANCE_TYPE" "$VCPUS" "$MEMORY" "$NETWORK" "$STORAGE_TYPE" "$PRICE"
     done
     
     echo "+------------------+-------+--------------+----------------------+-------------+------------+"
@@ -316,17 +316,17 @@ if [ "$SHOW_TYPES" = "y" ]; then
         
         # Create temporary file with pricing data
         TEMP_PRICE_FILE="/tmp/instance_pricing_$$"
-        echo "$FILTERED_DATA" | jq -r '.[] | @tsv' | while IFS=$'\t' read -r instance_type vcpus memory network storage; do
+        echo "$FILTERED_DATA" | jq -r '.[] | @tsv' | while IFS=$'\t' read -r INSTANCE_TYPE VCPUS MEMORY NETWORK STORAGE; do
             # Determine storage type
-            if [ "$storage" = "null" ] || [ -z "$storage" ]; then
+            if [ "$STORAGE" = "null" ] || [ -z "$STORAGE" ]; then
                 STORAGE_TYPE="EBS-only"
             else
-                STORAGE_TYPE="${storage}GB NVMe"
+                STORAGE_TYPE="${STORAGE}GB NVMe"
             fi
             
             # Get pricing
             PRICE="N/A"
-            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$instance_type" "Type=TERM_MATCH,Field=operatingSystem,Value=Linux" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
+            PRICE_DATA=$(aws pricing get-products --service-code AmazonEC2 --region us-east-1 --profile "$PROFILE" --filters "Type=TERM_MATCH,Field=instanceType,Value=$INSTANCE_TYPE" "Type=TERM_MATCH,Field=operatingSystem,Value=Linux" "Type=TERM_MATCH,Field=regionCode,Value=$REGION" "Type=TERM_MATCH,Field=capacitystatus,Value=Used" "Type=TERM_MATCH,Field=servicecode,Value=AmazonEC2" "Type=TERM_MATCH,Field=tenancy,Value=Shared" --max-items 1 --color off 2>/dev/null)
             if [ -n "$PRICE_DATA" ] && [ "$PRICE_DATA" != "null" ]; then
                 PRICE_RAW=$(echo "$PRICE_DATA" | jq -r '.PriceList[0] | fromjson | .terms.OnDemand | to_entries[0].value.priceDimensions | to_entries[0].value.pricePerUnit.USD' 2>/dev/null || echo "N/A")
                 if [ "$PRICE_RAW" != "N/A" ] && [ "$PRICE_RAW" != "null" ] && [ -n "$PRICE_RAW" ] && [ "$PRICE_RAW" != "0.0000000000" ] && [ "$PRICE_RAW" != "0" ]; then
@@ -340,12 +340,12 @@ if [ "$SHOW_TYPES" = "y" ]; then
                 SORT_PRICE="999999"
             fi
             
-            echo "$SORT_PRICE|$instance_type|$vcpus|$memory|$network|$STORAGE_TYPE|$PRICE" >> "$TEMP_PRICE_FILE"
+            echo "$SORT_PRICE|$INSTANCE_TYPE|$VCPUS|$MEMORY|$NETWORK|$STORAGE_TYPE|$PRICE" >> "$TEMP_PRICE_FILE"
         done
         
         # Sort by price and display
-        sort -t'|' -k1,1n "$TEMP_PRICE_FILE" | while IFS='|' read -r sort_price instance_type vcpus memory network storage_type display_price; do
-            printf "| %-16s | %-5s | %-12s | %-20s | %-11s | %-10s |\n" "$instance_type" "$vcpus" "$memory" "$network" "$storage_type" "$display_price"
+        sort -t'|' -k1,1n "$TEMP_PRICE_FILE" | while IFS='|' read -r SORT_PRICE INSTANCE_TYPE VCPUS MEMORY NETWORK STORAGE_TYPE DISPLAY_PRICE; do
+            printf "| %-16s | %-5s | %-12s | %-20s | %-11s | %-10s |\n" "$INSTANCE_TYPE" "$VCPUS" "$MEMORY" "$NETWORK" "$STORAGE_TYPE" "$DISPLAY_PRICE"
         done
         
         rm -f "$TEMP_PRICE_FILE"

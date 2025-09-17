@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Archive IAM Users
+#  Name: Launch Instance
 #  GitHub repository: https://github.com/2ndSightLab
-#  File: iam-users.sh
+#  File: launch_instance.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Archive IAM users
+#  Launch EC2 instance
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -20,22 +20,27 @@
 # 
 ################################################################
 
+launch_instance(){
+  local ami_id="$1"
+  local key_pair_name="$2"
+  local security_group_id="$3"
+  local subnet_id="$4"
+  local kms_key="$5"
+  local archive_to="$6"
+  local region="$7"
+  local instance_size="$8"
 
+   local instance_id=$(aws ec2 run-instances --image-id "$ami_id" \
+    --instance-type "$instance_size" --key-name "$key_pair_name" \
+    --security-group-ids "$security_group_id" \
+    --subnet-id "$subnet_id" \
+    --block-device-mappings "$block_device_mappings" \
+    --query "Instances[0].InstanceId" \
+    --output text \
+    --region $region \
+    --profile "$archive_to" \
+    --color off 2>&1)
+ 
+  echo "$instance_id"
 
-cat <<'END_TEXT'
-
-***************************
-IAM Users 
-***************************
-
-You may want a record of the IAM user names in this account
-in case they appear in any logs or you need to replicate
-them again later. Here are a list of the IAM users in this account:
-
-END_TEXT
-
-aws iam list-users --profile $ARCHIVE_FROM --region $REGION --query "Users[].UserName" --output text \
-  | xargs -n 1
-
-read -p "Copy the names of the roles into a parameter or secret if needed. \
-  Enter to continue. Ctrl-C to exit" OK
+}

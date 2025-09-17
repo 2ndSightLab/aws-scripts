@@ -38,10 +38,10 @@ in an SSM parameter for future reference.
 
 END_TEXT
 
-aws iam list-policies --profile $archive_from --region $region \
+aws iam list-policies --profile $ARCHIVE_FROM --region $REGION \
   --scope Local \
   --query "Policies[].PolicyName" \
   --output text \
   | xargs -n 1
 
-read -p "Copy or recreate the above policies as needed. Ctrl-C to exit" ok
+read -p "Copy or recreate the above policies as needed. Ctrl-C to exit" OK

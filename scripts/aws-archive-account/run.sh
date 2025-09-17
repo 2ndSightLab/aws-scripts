@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#/bin/bash -e
 ################################################################
 #
 #  Name: AWS Archive Account
@@ -20,13 +20,9 @@
 # 
 ################################################################
 
-
-# copy resources from an account to an archive account
-################
-
 #these variables contain the AWS CLI profiles used in the to and from AWS account
-archive_to=""
-archive_from=""
+ARCHIVE_TO=""
+ARCHIVE_FROM=""
 clear
 echo ""
 echo "About this script"
@@ -42,7 +38,11 @@ echo "* Permission to assume an archive role in the to_account"
 echo "* Permission to assume an archive role in the from_account"
 echo "* The roles in both accounts have required permissions."
 echo ""
-read -p "Have you created the user, roles and policies? Ctrl-C to exit. Enter to continue." ok
+
+while true; do
+    read -p "Have you created the user, roles and policies? Ctrl-C to exit. Enter to continue." OK
+    break
+done
 echo ""
 echo "You can do the following with this script:"
 echo ""
@@ -50,15 +50,22 @@ echo "1 Archive: archive or copy resources from one AWS account to another"
 echo "2 Launch an instance from an AMI to test it with a given profile before you deregister the source AMI"
 echo "3 Apply a lifecycle rule to a bucket"
 echo ""
-read -p "Enter the number for the action you want to run: " action
-echo ""
-[[ " $list " =~ " $value " ]] && echo "Action: $action" || (echo "Action $action is invalid"; exit 1)
-if [ "$action" == "2" ]; then
+
+while true; do
+    read -p "Enter the number for the action you want to run: " ACTION
+    if [[ "$ACTION" =~ ^[1-3]$ ]]; then
+        echo "Action: $ACTION"
+        break
+    else
+        echo "Action $ACTION is invalid. Please enter 1, 2, or 3."
+    fi
+done
+if [ "$ACTION" == "2" ]; then
 source scripts/test-ami.sh
 exit 0
 fi 
 
-if [ "$action" == "3" ]; then 
+if [ "$ACTION" == "3" ]; then 
 source scripts/s3-lifecycle.sh
 exit 0
 fi
@@ -77,19 +84,60 @@ echo "You can use these scripts to configure your profiles:"
 echo "scripts/aws-cli-source-profile/run.sh"
 echo "scripts/aws-cli-role-profile/run.sh"
 echo ""
-read -p "Enter the profile for the from account: " archive_from
-echo "Validate credentials for $archive_from:"
-aws sts get-caller-identity --profile $archive_from
+
+while true; do
+    read -p "Enter the profile for the from account: " ARCHIVE_FROM
+    if [ -n "$ARCHIVE_FROM" ] && [[ "$ARCHIVE_FROM" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
+        echo "Validate credentials for $ARCHIVE_FROM:"
+        if aws sts get-caller-identity --profile "$ARCHIVE_FROM" --color off; then
+            break
+        else
+            echo "Invalid profile or credentials. Please try again."
+        fi
+    else
+        echo "Invalid profile name format. Use only letters, numbers, underscores, periods, and hyphens."
+    fi
+done
 echo ""
-read -p "Enter the profile from the to account: " archive_to
-echo "Validate credentials for $archive_to:"
-aws sts get-caller-identity --profile $archive_to
+
+while true; do
+    read -p "Enter the profile from the to account: " ARCHIVE_TO
+    if [ -n "$ARCHIVE_TO" ] && [[ "$ARCHIVE_TO" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
+        echo "Validate credentials for $ARCHIVE_TO:"
+        if aws sts get-caller-identity --profile "$ARCHIVE_TO" --color off; then
+            break
+        else
+            echo "Invalid profile or credentials. Please try again."
+        fi
+    else
+        echo "Invalid profile name format. Use only letters, numbers, underscores, periods, and hyphens."
+    fi
+done
 echo ""
-read -p "Enter the profile used to list the KMS keys used to encrypt new resources: " kms_profile
-echo "Validate credentials for $kms_profile:"
-aws sts get-caller-identity --profile $kms_profile 
+
+while true; do
+    read -p "Enter the profile used to list the KMS keys used to encrypt new resources: " KMS_PROFILE
+    if [ -n "$KMS_PROFILE" ] && [[ "$KMS_PROFILE" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
+        echo "Validate credentials for $KMS_PROFILE:"
+        if aws sts get-caller-identity --profile "$KMS_PROFILE" --color off; then
+            break
+        else
+            echo "Invalid profile or credentials. Please try again."
+        fi
+    else
+        echo "Invalid profile name format. Use only letters, numbers, underscores, periods, and hyphens."
+    fi
+done
 echo ""
-read -p "Enter region: " region
+
+while true; do
+    read -p "Enter region: " REGION
+    if [ -n "$REGION" ] && [[ "$REGION" =~ ^[a-z0-9-]+$ ]]; then
+        break
+    else
+        echo "Invalid region format. Please enter a valid AWS region (e.g., us-east-1)."
+    fi
+done
 
 source scripts/s3-buckets.sh
 source scripts/amis.sh

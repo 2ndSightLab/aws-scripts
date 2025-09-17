@@ -42,12 +42,12 @@ END_TEXT
 
 aws configure list-profiles
 
-read -p "Enter the profile you want to use: " profile
-read -p "Enter the region you want to use: " region
-read -p "Enter the KMS profile that can list available KMS keys to encrypt the test instance: " kms_profile
+read -p "Enter the profile you want to use: " PROFILE
+read -p "Enter the region you want to use: " REGION
+read -p "Enter the KMS profile that can list available KMS keys to encrypt the test instance: " KMS_PROFILE
 
-read -p "Do you want to see a list of images in the from account? (y): " view
-if [ "$view" == "y" ]; then
+read -p "Do you want to see a list of images in the from account? (y): " VIEW
+if [ "$VIEW" == "y" ]; then
 
 cat <<'END_TEXT'
 Below is a list of Amazon Machine Images in this account.
@@ -56,25 +56,25 @@ END_TEXT
 
   aws ec2 describe-images \
   --owners self \
-  --profile $profile \
-  --region $region \
+  --profile $PROFILE \
+  --region $REGION \
   --query 'Images[*].{Name: Name, ImageId: ImageId, Snapshots: BlockDeviceMappings[?Ebs.Encrypted==`true`].Ebs.SnapshotId}' \
   --output json \
  | jq -r '.[] | "\(.Name),\(.ImageId),\(.Snapshots[] // "N/A")" ' \
- | while IFS=, read -r ami_name ami_id snapshot_id; do
-    if [[ "${snapshot_id}" == "N/A" ]]; then
-        echo "AMI Name: ${ami_name}, AMI ID: ${ami_id}, KMS Key ID: No encryption/KMS key used"
+ | while IFS=, read -r AMI_NAME AMI_ID SNAPSHOT_ID; do
+    if [[ "${SNAPSHOT_ID}" == "N/A" ]]; then
+        echo "AMI Name: ${AMI_NAME}, AMI ID: ${AMI_ID}, KMS Key ID: No encryption/KMS key used"
     else
-        kms_key_id=$(aws ec2 describe-snapshots \
-          --snapshot-ids "${snapshot_id}" \
-          --profile $profile \
-          --region $region \
+        KMS_KEY_ID=$(aws ec2 describe-snapshots \
+          --snapshot-ids "${SNAPSHOT_ID}" \
+          --profile $PROFILE \
+          --region $REGION \
           --query "Snapshots[*].KmsKeyId" \
           --output text 2>/dev/null)
-        if [[ -z "${kms_key_id}" ]]; then
-            kms_key_id="Default/AWS managed key"
+        if [[ -z "${KMS_KEY_ID}" ]]; then
+            KMS_KEY_ID="Default/AWS managed key"
         fi
-        echo "AMI Name: ${ami_name}, AMI ID: ${ami_id}, KMS Key ID: ${kms_key_id}"
+        echo "AMI Name: ${AMI_NAME}, AMI ID: ${AMI_ID}, KMS Key ID: ${KMS_KEY_ID}"
     fi
   done
 
@@ -88,19 +88,19 @@ read -p  "Done displaying image names. Copy AMI id you want to test: " AMI_ID
    echo "EC2 SSH keys in the to account:"
    echo ""
    aws ec2 describe-key-pairs  --query 'KeyPairs[*].KeyName' \
-     --profile $profile --region $region --output text
+     --profile $PROFILE --region $REGION --output text
    echo ""
    read -p "Enter the name of your SSH key pair or list to see a list of key pairs: " KEY_PAIR
    echo ""
    echo "Security groups in the to account:"
    echo ""
    aws ec2 describe-security-groups --query "SecurityGroups[*].[GroupId,GroupName]" --output text \
-      --region $region --profile $profile
+      --region $REGION --profile $PROFILE
    echo ""
    read -p "Enter the Security Group ID (e.g., sg-xxxxxxxxxxxxxxxxx): " SG_ID
    echo ""
    echo "Subnets in the to account:"
-   aws ec2 describe-subnets --profile $profile --region $region \
+   aws ec2 describe-subnets --profile $PROFILE --region $REGION \
       --query "Subnets[*].{ID:SubnetId,Name:Tags[?Key=='Name']|[0].Value}" --output text
    echo ""
    read -p "Enter the Subnet ID (e.g., subnet-xxxxxxxxxxxxxxxxx): " SUBNET_ID
@@ -108,42 +108,42 @@ read -p  "Done displaying image names. Copy AMI id you want to test: " AMI_ID
    echo "Key ARNs and Aliases (one command for all this data: #awswishlist):"
    echo ""
 
-   aws kms list-aliases --profile $kms_profile --region $region \
-    | jq -r --arg region "$region" \
-    --arg accountid "$(aws sts get-caller-identity --profile $kms_profile --query Account --output text)" \
+   aws kms list-aliases --profile $KMS_PROFILE --region $REGION \
+    | jq -r --arg region "$REGION" \
+    --arg accountid "$(aws sts get-caller-identity --profile $KMS_PROFILE --query Account --output text)" \
     '.Aliases[] | select(.TargetKeyId) | "arn:aws:kms:" + $region + ":" + $accountid + ":key/" + .TargetKeyId + " " + .AliasName'
 
    echo ""  
    read -p "Enter the KMS Key ARN for EBS encryption in the destination account: " KMS_KEY
         
-   read -p "Do you want to see valid instances types for this ami? (y): " show
-   if [ "$show" == "y" ]; then
+   read -p "Do you want to see valid instances types for this ami? (y): " SHOW
+   if [ "$SHOW" == "y" ]; then
 
        aws ec2 describe-instance-types \
        --filters "Name=processor-info.supported-architecture,\
        Values=$(aws ec2 describe-images --image-ids "$AMI_ID" \
        --query 'Images[0].Architecture' --output text \
-       --profile "$profile")" --query 'InstanceTypes[*].InstanceType' \
-       --output json --region $region --profile "$profile" | jq -r '.[]'
+       --profile "$PROFILE")" --query 'InstanceTypes[*].InstanceType' \
+       --output json --region $REGION --profile "$PROFILE" | jq -r '.[]'
 
        echo ""
    fi
 
-   read -p "Enter desired image type (e.g., t2.micro, t2.medium): " instance_type
+   read -p "Enter desired image type (e.g., t2.micro, t2.medium): " INSTANCE_TYPE
 
-   block_device_mappings='[{"DeviceName": "/dev/xvda","Ebs": {"Encrypted": true, "KmsKeyId": "'$KMS_KEY'"}}]'
-   echo "block_device_mappings: $block_device_mappings"
+   BLOCK_DEVICE_MAPPINGS='[{"DeviceName": "/dev/xvda","Ebs": {"Encrypted": true, "KmsKeyId": "'$KMS_KEY'"}}]'
+   echo "BLOCK_DEVICE_MAPPINGS: $BLOCK_DEVICE_MAPPINGS"
 
    echo "Launching instance..."
 
    aws ec2 run-instances --image-id "$AMI_ID" \
-    --instance-type "$instance_type" --key-name "$KEY_PAIR" \
+    --instance-type "$INSTANCE_TYPE" --key-name "$KEY_PAIR" \
     --security-group-ids "$SG_ID" \
     --subnet-id "$SUBNET_ID" \
-    --block-device-mappings "$block_device_mappings" \
+    --block-device-mappings "$BLOCK_DEVICE_MAPPINGS" \
     --output text \
-    --region $region \
-    --profile "$profile"
+    --region $REGION \
+    --profile "$PROFILE"
 
    echo "Instance launched. Wait for the instance to become available to ensure it works and test access as needed."
 

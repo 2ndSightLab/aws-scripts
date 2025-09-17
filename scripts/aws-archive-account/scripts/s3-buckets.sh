@@ -22,53 +22,53 @@
 
 
 archive_bucket(){
-   from_bucket="$1"
-   to_bucket="$2"
-   archive_to="$3"
-   region="$4"
-   new_key_id="$5"
+   FROM_BUCKET="$1"
+   TO_BUCKET="$2"
+   ARCHIVE_TO="$3"
+   REGION="$4"
+   NEW_KEY_ID="$5"
 
-   if aws s3api list-buckets --profile "${archive_to}" --region "${region}" \
-         --query "Buckets[?Name=='${to_bucket}'].Name" --output text | grep -q "${to_bucket}"; then
+   if aws s3api list-buckets --profile "${ARCHIVE_TO}" --region "${REGION}" \
+         --query "Buckets[?Name=='${TO_BUCKET}'].Name" --output text | grep -q "${TO_BUCKET}"; then
 
-      echo "Bucket: $to_bucket exists"
+      echo "Bucket: $TO_BUCKET exists"
 
    else
-      read -p "Bucket: $to_bucket does not exist in the destination account. Do you want to create it?"
+      read -p "Bucket: $TO_BUCKET does not exist in the destination account. Do you want to create it?"
 
       aws s3api create-bucket \
-          --bucket "${to_bucket}" \
-          --region "${region}" \
-          --profile "${archive_to}" \
-          --create-bucket-configuration LocationConstraint="${region}"
+          --bucket "${TO_BUCKET}" \
+          --region "${REGION}" \
+          --profile "${ARCHIVE_TO}" \
+          --create-bucket-configuration LocationConstraint="${REGION}"
    fi
 
-   key_id=$(aws s3api get-bucket-encryption \
-      --bucket "${to_bucket}" \
-      --profile "${archive_to}" \
-      --region "${region}")
+   KEY_ID=$(aws s3api get-bucket-encryption \
+      --bucket "${TO_BUCKET}" \
+      --profile "${ARCHIVE_TO}" \
+      --region "${REGION}")
 
    #the jq filter has to be on one line apparently or Gemini cannot tell me how to break it up without causing an error.
-   key_id=$(echo "${key_id_raw_output}" | jq -r '.ServerSideEncryptionConfiguration.Rules[] | select(.ApplyServerSideEncryptionByDefault.SSEAlgorithm == "aws:kms") | .ApplyServerSideEncryptionByDefault.KMSMasterKeyID')
+   KEY_ID=$(echo "${KEY_ID_RAW_OUTPUT}" | jq -r '.ServerSideEncryptionConfiguration.Rules[] | select(.ApplyServerSideEncryptionByDefault.SSEAlgorithm == "aws:kms") | .ApplyServerSideEncryptionByDefault.KMSMasterKeyID')
 
-   echo "key_id on bucket: $key_id"
+   echo "KEY_ID on bucket: $KEY_ID"
 
-   if [[ -z "${key_id}" ]]; then
+   if [[ -z "${KEY_ID}" ]]; then
 
-     if [[ -z "$new_key_id" ]]; then
-       read -p "KMS key ID not found on to_bucket $to_bucket. Enter the ARN or ID of the KMS Key to use for encryption: " new_key_id
+     if [[ -z "$NEW_KEY_ID" ]]; then
+       read -p "KMS key ID not found on TO_BUCKET $TO_BUCKET. Enter the ARN or ID of the KMS Key to use for encryption: " NEW_KEY_ID
      fi
-     echo "Adding encryption to bucket using key: $new_key_id"
+     echo "Adding encryption to bucket using key: $NEW_KEY_ID"
      aws s3api put-bucket-encryption \
-        --bucket "${to_bucket}" \
-        --profile "${archive_to}" \
-        --region "${region}" \
+        --bucket "${TO_BUCKET}" \
+        --profile "${ARCHIVE_TO}" \
+        --region "${REGION}" \
         --server-side-encryption-configuration '{
         "Rules": [
         {
           "ApplyServerSideEncryptionByDefault": {
             "SSEAlgorithm": "aws:kms",
-            "KMSMasterKeyID": "'"${new_key_id}"'"
+            "KMSMasterKeyID": "'"${NEW_KEY_ID}"'"
           }
         }
         ]
@@ -78,9 +78,9 @@ archive_bucket(){
 
    #we need to use the role in the to account and make sure it has access to the 
    #bucket in the from account and the kms key used to encrypt the data
-   aws s3 sync s3://$from_bucket/ s3://$to_bucket/ \
-         --profile $archive_to \
-         --region $region
+   aws s3 sync s3://$FROM_BUCKET/ s3://$TO_BUCKET/ \
+         --profile $ARCHIVE_TO \
+         --region $REGION
 }
 
 cat <<'END_TEXT'
@@ -90,13 +90,13 @@ S3 Buckets
 ***************************
 END_TEXT
 
-read -p "Would you like to copy any S3 buckets? (y): " copy
+read -p "Would you like to copy any S3 buckets? (y): " COPY
 
-if [ "$copy" == "y" ]; then
+if [ "$COPY" == "y" ]; then
 
-read -p "Would you like to see the required IAM, KMS and S3 policies to transfer an encrypted bucket? (y): " v
+read -p "Would you like to see the required IAM, KMS and S3 policies to transfer an encrypted bucket? (y): " V
 
-if [ "$v" == "y" ]; then
+if [ "$V" == "y" ]; then
 
 cat <<'END_TEXT' 
 Add IAM policy for archive admin role in the from_account (limit further if needed):
@@ -172,8 +172,8 @@ the role executing the sync command needs KMS permissions in the IAM role policy
 END_TEXT
 fi
 
-read -p "Do you want to see the list of S3 buckets? (y): " view
-if [ "$view" == "y" ]; then
+read -p "Do you want to see the list of S3 buckets? (y): " VIEW
+if [ "$VIEW" == "y" ]; then
 
 cat <<'END_TEXT'
 
@@ -183,50 +183,50 @@ if one exists to decrypt the contents of the bucket.
 
 END_TEXT
 
-  for bucket_name in $(aws s3api list-buckets --query "Buckets[].Name" --output text --profile $archive_from --region $region); do 
-    echo "Bucket: ${bucket_name}" 
-    encryption_info=$(aws s3api get-bucket-encryption --bucket "${bucket_name}" --profile $archive_from --region $region)
+  for BUCKET_NAME in $(aws s3api list-buckets --query "Buckets[].Name" --output text --profile $ARCHIVE_FROM --region $REGION); do 
+    echo "Bucket: ${BUCKET_NAME}" 
+    ENCRYPTION_INFO=$(aws s3api get-bucket-encryption --bucket "${BUCKET_NAME}" --profile $ARCHIVE_FROM --region $REGION)
     if [[ $? -eq 0 ]]; then 
-       kms_key_id=$(echo "${encryption_info}" | \
+       KMS_KEY_ID=$(echo "${ENCRYPTION_INFO}" | \
        jq -r '.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.KMSMasterKeyID')
-    if [ "${kms_key_id}" == "null" ]; then kms_key_id=""; fi
-    echo "  KMS Key ID: ${kms_key_id}" 
+    if [ "${KMS_KEY_ID}" == "null" ]; then KMS_KEY_ID=""; fi
+    echo "  KMS Key ID: ${KMS_KEY_ID}" 
    fi
   done
   echo ""
 
 fi
 
-from_bucket="all"
+FROM_BUCKET="all"
 echo ""
 echo "Key ARNs and Aliases (one command for all this data: #awswishlist): "
 echo ""
 
-aws kms list-aliases --profile $kms_profile --region $region \
-    | jq -r --arg region "$region" \
-    --arg accountid "$(aws sts get-caller-identity --profile $kms_profile --query Account --output text)" \
+aws kms list-aliases --profile $KMS_PROFILE --region $REGION \
+    | jq -r --arg region "$REGION" \
+    --arg accountid "$(aws sts get-caller-identity --profile $KMS_PROFILE --query Account --output text)" \
     '.Aliases[] | select(.TargetKeyId) | "arn:aws:kms:" + $region + ":" + $accountid + ":key/" + .TargetKeyId + " " + .AliasName'
 
-read -p "Enter KMS key ARN (only, not alias) to use to encrypt buckets in target account: " new_key_id
+read -p "Enter KMS key ARN (only, not alias) to use to encrypt buckets in target account: " NEW_KEY_ID
 
-while [[ -n $from_bucket ]]; do
-   read -p "Enter the bucket name you want to archive or all. Enter to continue: " from_bucket
-   if [[ -n $from_bucket ]]; then
-     if [ "$from_bucket" == "all" ]; then
+while [[ -n $FROM_BUCKET ]]; do
+   read -p "Enter the bucket name you want to archive or all. Enter to continue: " FROM_BUCKET
+   if [[ -n $FROM_BUCKET ]]; then
+     if [ "$FROM_BUCKET" == "all" ]; then
 
-         BUCKETS=$(aws s3api list-buckets --profile $archive_from --region $region  --query "Buckets[].Name" --output text)
-         for from_bucket in $BUCKETS; do
-           to_bucket='archive-'$from_bucket
-           archive_bucket $from_bucket $to_bucket $archive_to $region $new_key_id
+         BUCKETS=$(aws s3api list-buckets --profile $ARCHIVE_FROM --region $REGION  --query "Buckets[].Name" --output text)
+         for FROM_BUCKET in $BUCKETS; do
+           TO_BUCKET='archive-'$FROM_BUCKET
+           archive_bucket $FROM_BUCKET $TO_BUCKET $ARCHIVE_TO $REGION $NEW_KEY_ID
          done
-         from_bucket=""
+         FROM_BUCKET=""
      else
-       read -p "Enter the bucket to which you want to copy the files in the archive_to account: " to_bucket
-       archive_bucket $from_bucket $to_bucket $archive_to $region $new_key_id
+       read -p "Enter the bucket to which you want to copy the files in the ARCHIVE_TO account: " TO_BUCKET
+       archive_bucket $FROM_BUCKET $TO_BUCKET $ARCHIVE_TO $REGION $NEW_KEY_ID
     fi
   fi
    
 done
 
 fi #end copy
-copy=""
+COPY=""

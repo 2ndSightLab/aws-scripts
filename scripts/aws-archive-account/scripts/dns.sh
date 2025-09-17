@@ -28,8 +28,8 @@ DNS
 ***************************
 END_TEXT
 
-read -p "Do you want to copy any DNS (Route 53) records? " copy
-if [ "$copy" == "y" ]; then 
+read -p "Do you want to copy any DNS (Route 53) records? " COPY
+if [ "$COPY" == "y" ]; then 
 
 cat <<'END_TEXT'
 
@@ -60,9 +60,9 @@ echo ""
 echo "Hosted Zones:"
 echo ""
 aws route53 list-hosted-zones --query "HostedZones[*].[Id, Name]" --output text \
-  --profile $archive_from --region us-east-1
+  --profile $ARCHIVE_FROM --region us-east-1
 echo ""
-read -p "Enter to continue. Ctrl-C to exit." ok
+read -p "Enter to continue. Ctrl-C to exit." OK
 
 fi #end if copy
 copy=""

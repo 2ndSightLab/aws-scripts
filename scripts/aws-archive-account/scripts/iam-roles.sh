@@ -34,7 +34,7 @@ them again later. Here are a list of the IAM oroles in this account:
 
 END_TEXT
 
-aws iam list-roles --profile $archive_from --region $region \
+aws iam list-roles --profile $ARCHIVE_FROM --region $REGION \
   --query 'Roles[?starts_with(Path, `/`) && !starts_with(Path, `/aws-service-role/`) && !starts_with(Path, `/aws-reserved/sso/`)].RoleName' \
   --output text \
 | xargs -n 1
@@ -42,4 +42,4 @@ aws iam list-roles --profile $archive_from --region $region \
 echo ""
 
 read -p "Copy the names of the roles into a parameter or secret if needed. \
-  Enter to continue. Ctrl-C to exit" ok
+  Enter to continue. Ctrl-C to exit" OK

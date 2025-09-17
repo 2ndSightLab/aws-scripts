@@ -36,28 +36,28 @@ END_TEXT
 
 aws configure list-profiles
 echo ""
-read -p "Enter the CLI profile to use to apply the lifecycle policy: " profile
-read -p "Enter the region in which the bucket exists where you want to apply the rule: " region
+read -p "Enter the CLI profile to use to apply the lifecycle policy: " PROFILE
+read -p "Enter the region in which the bucket exists where you want to apply the rule: " REGION
 
 echo "S3 buckets in account:"
 #echo ""
 #aws s3 ls --profile $profile --region $region | cut -d ' ' -f3
 echo ""
 
-printf "%-45s | %-15s | %-20s\n" "BUCKET NAME" "HAS LIFECYCLE" "STORAGE CLASS" && printf "%-45s-+-%-15s-+-%-20s\n" "---------------------------------------------" "---------------" "--------------------" && aws s3api list-buckets --profile $profile --region $region --query "Buckets[].Name" --output text | tr '\t' '\n' | while read bucket; do 
-  has_lifecycle=$(aws s3api get-bucket-lifecycle-configuration --profile $profile --region $region --bucket "$bucket" >/dev/null 2>&1 && echo "Y" || echo "N")
-  storage_class=$(aws s3api get-bucket-lifecycle-configuration --profile $profile --region $region --bucket "$bucket" 2>/dev/null | jq -r '.Rules[]?.Transitions[]?.StorageClass // empty' 2>/dev/null | paste -sd, - || echo "None")
-  printf "%-45s | %-15s | %-20s\n" "$bucket" "$has_lifecycle" "$storage_class"
+printf "%-45s | %-15s | %-20s\n" "BUCKET NAME" "HAS LIFECYCLE" "STORAGE CLASS" && printf "%-45s-+-%-15s-+-%-20s\n" "---------------------------------------------" "---------------" "--------------------" && aws s3api list-buckets --profile $PROFILE --region $REGION --query "Buckets[].Name" --output text | tr '\t' '\n' | while read BUCKET; do 
+  HAS_LIFECYCLE=$(aws s3api get-bucket-lifecycle-configuration --profile $PROFILE --region $REGION --bucket "$BUCKET" >/dev/null 2>&1 && echo "Y" || echo "N")
+  STORAGE_CLASS=$(aws s3api get-bucket-lifecycle-configuration --profile $PROFILE --region $REGION --bucket "$BUCKET" 2>/dev/null | jq -r '.Rules[]?.Transitions[]?.StorageClass // empty' 2>/dev/null | paste -sd, - || echo "None")
+  printf "%-45s | %-15s | %-20s\n" "$BUCKET" "$HAS_LIFECYCLE" "$STORAGE_CLASS"
 done
 
 
 echo ""
-read -p "Enter the name of the S3 bucket to which you want to apply the policy: " bucket
+read -p "Enter the name of the S3 bucket to which you want to apply the policy: " BUCKET
 echo ""
 echo "Here is a list of possible storage classes for your life cycle rule and associated costs:"
 
-case $region in
-     "us-east-1") location="US East (N. Virginia)" ;;
+case $REGION in
+     "us-east-1") LOCATION="US East (N. Virginia)" ;;
      "us-east-2") location="US East (Ohio)" ;;
      "us-west-1") location="US West (N. California)" ;;
      "us-west-2") location="US West (Oregon)" ;;
@@ -101,11 +101,11 @@ CAVEATS:
 
 END_TEXT
 
-read -p "Would you like to see ALL the fees associate with S3 for this region from the pricing API? (y): " view
+read -p "Would you like to see ALL the fees associate with S3 for this region from the pricing API? (y): " VIEW
 
-if [ "$view" == "y" ]; then 
+if [ "$VIEW" == "y" ]; then 
 echo ""
-aws pricing get-products --profile $profile --service-code AmazonS3  --filters "Type=TERM_MATCH,Field=location,Value=$location" --format-version aws_v1 --region us-east-1 | \
+aws pricing get-products --profile $PROFILE --service-code AmazonS3  --filters "Type=TERM_MATCH,Field=location,Value=$LOCATION" --format-version aws_v1 --region us-east-1 | \
 jq -r '.PriceList | map(fromjson) | map({
    storageClass: .product.attributes.storageClass,
    location: .product.attributes.location,
@@ -123,26 +123,26 @@ echo ""
 aws s3api put-bucket-lifecycle-configuration help 2>/dev/null | grep "StorageClass" | grep "DEEP_ARCHIVE" | sed 's/,//g' | sed 's/^[[:space:]]*//' | uniq
 
 echo ""
-read -p "Enter a storage class value: " sc
+read -p "Enter a storage class value: " SC
 echo ""
 
-read -p "In how many days do you want to migrate your bucket to the new storage class? " days
+read -p "In how many days do you want to migrate your bucket to the new storage class? " DAYS
 echo ""
 echo "Apply lifecycle policy"
 
-id="move-to-$sc-in-$days-days"
+ID="move-to-$SC-in-$DAYS-days"
 
 cat > /tmp/policy.json << EOF
 {
    "Rules": [
      {
-        "ID": "$id",
+        "ID": "$ID",
         "Filter": {},
         "Status": "Enabled",
         "Transitions": [
            {
-              "Days": $days,
-              "StorageClass": "$sc"
+              "Days": $DAYS,
+              "StorageClass": "$SC"
            }
         ]
      }
@@ -153,6 +153,6 @@ EOF
 cat /tmp/policy.json
 
 aws s3api put-bucket-lifecycle-configuration \
-    --bucket "$bucket" \
-    --profile $profile --region $region \
+    --bucket "$BUCKET" \
+    --profile $PROFILE --region $REGION \
     --lifecycle-configuration "file:///tmp/policy.json"

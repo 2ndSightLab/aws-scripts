@@ -28,9 +28,9 @@ Elastic IP Addresses (EIPs)
 ***************************
 END_TEXT
 
-read -p "Do you want to copy any EIPs? " copy
+read -p "Do you want to copy any EIPs? " COPY
 
-if [ "$copy" == "y" ]; then 
+if [ "$COPY" == "y" ]; then 
 
 cat <<'END_TEXT'
 
@@ -41,10 +41,10 @@ in this account:
 
 END_TEXT
 
-aws ec2 describe-addresses --profile $archive_from --region $region \
+aws ec2 describe-addresses --profile $ARCHIVE_FROM --region $REGION \
   --query 'Addresses[*].{Name:Tags[?Key==`Name`].Value | [0], PublicIp:PublicIp}' --output text
 
-read -p "If you want a record of the EIPs copy to a secret or parameter. Enter to continue. Ctrl-C to exit)" ok
+read -p "If you want a record of the EIPs copy to a secret or parameter. Enter to continue. Ctrl-C to exit)" OK
 
 fi #end if copy
-copy=""
+COPY=""

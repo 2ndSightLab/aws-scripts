@@ -23,19 +23,19 @@
 
 
 archive_secret(){
- local from_secret="$1"
- local to_secret="$2"
- local archive_from="$3"
- local archive_to="$4"
- local region="$5"
- local kms_key_id="$6"
+ local FROM_SECRET="$1"
+ local TO_SECRET="$2"
+ local ARCHIVE_FROM="$3"
+ local ARCHIVE_TO="$4"
+ local REGION="$5"
+ local KMS_KEY_ID="$6"
 
  local SECRET_VALUE=""
 
  SECRET_VALUE=$(aws secretsmanager get-secret-value \
-    --profile "$archive_from" \
-    --region "$region" \
-    --secret-id "$from_secret" \
+    --profile "$ARCHIVE_FROM" \
+    --region "$REGION" \
+    --secret-id "$FROM_SECRET" \
     --query 'SecretString' \
     --output text)
    
@@ -45,11 +45,11 @@ archive_secret(){
     fi
 
     aws secretsmanager create-secret \
-    --profile "$archive_to" \
-    --region "$region" \
-    --name "$to_secret" \
+    --profile "$ARCHIVE_TO" \
+    --region "$REGION" \
+    --name "$TO_SECRET" \
     --secret-string "$SECRET_VALUE" \
-    --kms-key-id "$kms_key_id"
+    --kms-key-id "$KMS_KEY_ID"
 
     SECRET_VALUE=""
 }
@@ -62,8 +62,8 @@ SSM Secrets
 
 END_TEXT
 
-read -p "Would you like to copy any secrets? (y): " copy
-if [ "$copy" == "y" ]; then 
+read -p "Would you like to copy any secrets? (y): " COPY
+if [ "$COPY" == "y" ]; then 
 
 cat <<'END_TEXT'
 
@@ -77,51 +77,51 @@ END_TEXT
 echo "Secrets in source account:"
 echo ""
 aws secretsmanager list-secrets --query "SecretList[*].[Name, KmsKeyId]" --output text \
- --profile $archive_from --region $region
+ --profile $ARCHIVE_FROM --region $REGION
 
 echo ""
-from_secret="all"
+FROM_SECRET="all"
 echo ""
 echo "Key ARNs and Aliases (one command for all this data: #awswishlist):"
 echo ""
 
-aws kms list-aliases --profile $kms_profile --region $region \
-    | jq -r --arg region "$region" \
-    --arg accountid "$(aws sts get-caller-identity --profile $kms_profile --query Account --output text)" \
+aws kms list-aliases --profile $KMS_PROFILE --region $REGION \
+    | jq -r --arg region "$REGION" \
+    --arg accountid "$(aws sts get-caller-identity --profile $KMS_PROFILE --query Account --output text)" \
     '.Aliases[] | select(.TargetKeyId) | "arn:aws:kms:" + $region + ":" + $accountid + ":key/" + .TargetKeyId + " " + .AliasName'
 
-read -p "Enter KMS key ARN (only, not alias) to use to encrypt secrets in target account: " new_key_id
+read -p "Enter KMS key ARN (only, not alias) to use to encrypt secrets in target account: " NEW_KEY_ID
 
-while [[ -n $from_secret ]]; do
-   read -p "Enter the secret name you want to archive or all. Enter to continue: " from_secret
-   if [[ -n $from_secret ]]; then
-     if [ "$from_secret" == "all" ]; then
+while [[ -n $FROM_SECRET ]]; do
+   read -p "Enter the secret name you want to archive or all. Enter to continue: " FROM_SECRET
+   if [[ -n $FROM_SECRET ]]; then
+     if [ "$FROM_SECRET" == "all" ]; then
 
-         SECRETS=$(aws secretsmanager list-secrets --query 'SecretList[*].Name' --profile $archive_from --region $region --output text)
-         for from_secret in $SECRETS; do
-           to_account=$(aws sts get-caller-identity --query Account --output text --profile $archive_from)
-           to_secret='archive-'$to_account'-'$from_secret
+         SECRETS=$(aws secretsmanager list-secrets --query 'SecretList[*].Name' --profile $ARCHIVE_FROM --region $REGION --output text)
+         for FROM_SECRET in $SECRETS; do
+           TO_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile $ARCHIVE_FROM)
+           TO_SECRET='archive-'$TO_ACCOUNT'-'$FROM_SECRET
 
-           echo "from_secret: $from_secret"
-           echo "to_secret: $to_secret"
-           echo "archive_from: $archive_from"
-           echo "archive_to: $archive_to"
-           echo "region: $region"
-           echo "new_key_id: $new_key_id"
+           echo "FROM_SECRET: $FROM_SECRET"
+           echo "TO_SECRET: $TO_SECRET"
+           echo "ARCHIVE_FROM: $ARCHIVE_FROM"
+           echo "ARCHIVE_TO: $ARCHIVE_TO"
+           echo "REGION: $REGION"
+           echo "NEW_KEY_ID: $NEW_KEY_ID"
 
-           if [[ -z "$from_secret" ]]; then echo "from_secret is not set"; exit 1; fi
-           if [[ -z "$to_secret" ]]; then echo "from_secret is not set"; exit 1; fi
-           if [[ -z "$archive_from" ]]; then echo "from_secret is not set"; exit 1; fi
-           if [[ -z "$archive_to" ]]; then echo "from_secret is not set"; exit 1; fi
-           if [[ -z "$region" ]]; then echo "from_secret is not set"; exit 1; fi
-           if [[ -z "$new_key_id" ]]; then echo "new_key_id is not set"; exit 1; fi
+           if [[ -z "$FROM_SECRET" ]]; then echo "FROM_SECRET is not set"; exit 1; fi
+           if [[ -z "$TO_SECRET" ]]; then echo "TO_SECRET is not set"; exit 1; fi
+           if [[ -z "$ARCHIVE_FROM" ]]; then echo "ARCHIVE_FROM is not set"; exit 1; fi
+           if [[ -z "$ARCHIVE_TO" ]]; then echo "ARCHIVE_TO is not set"; exit 1; fi
+           if [[ -z "$REGION" ]]; then echo "REGION is not set"; exit 1; fi
+           if [[ -z "$NEW_KEY_ID" ]]; then echo "NEW_KEY_ID is not set"; exit 1; fi
 
-           archive_secret "$from_secret" "$to_secret" "$archive_from" "$archive_to" "$region" "$new_key_id"
+           archive_secret "$FROM_SECRET" "$TO_SECRET" "$ARCHIVE_FROM" "$ARCHIVE_TO" "$REGION" "$NEW_KEY_ID"
          done
-         from_secret=""
+         FROM_SECRET=""
      else
-       read -p "Enter the secet name in the destination account:" to_secret
-       archive_secret $from_secret $to_secret $archive_from $archive_to $region $new_key_id
+       read -p "Enter the secet name in the destination account:" TO_SECRET
+       archive_secret $FROM_SECRET $TO_SECRET $ARCHIVE_FROM $ARCHIVE_TO $REGION $NEW_KEY_ID
     fi
   fi
 
@@ -129,5 +129,5 @@ done
 
 
 fi #end if copy
-copy=""
+COPY=""
 
