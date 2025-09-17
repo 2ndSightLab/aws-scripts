@@ -2,7 +2,7 @@
 
 __Summary__
 
-This repository contains bash scripts to do whatever is required on AWS.
+This repository contains bash scripts to do whatever is required on AWS. For the humans: These are instructions for Amazon Q below. For information on how this code is written and any caveats follow my blog (email or on Medium) at https://medium.com/cloud-security.
 
 __Global Context__
 
