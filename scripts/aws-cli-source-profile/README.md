@@ -12,7 +12,7 @@ __Context__
 * Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
 * Must follow all script standards in https://github.com/2ndSightLab/aws-scripts/blob/main/scripts/README.md
 
-## Implementation
+__Implementation__
 - Prompt user for profile name
 - Prompt user for AWS access key ID
 - Prompt user for AWS secret access key
@@ -21,14 +21,14 @@ __Context__
 - Configure AWS CLI profile using aws configure set commands
 - Test profile using aws sts get-caller-identity
 
-## Variables
+__Variables__
 - PROFILE - AWS CLI profile name to create
 - AWS_ACCESS_KEY_ID - AWS access key ID
 - AWS_SECRET_ACCESS_KEY - AWS secret access key
 - REGION - AWS region (e.g. us-east-1)
 - OUTPUT - output format (e.g. json or text)
 
-## Error Handling
+__Error Handling__
 - Check if source profile exists and is valid
 - Verify AWS CLI is installed
 - Confirm new profile creation was successful
