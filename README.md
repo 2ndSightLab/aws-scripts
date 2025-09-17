@@ -28,7 +28,7 @@ __Functions__
 * Each function name is lower case with words separated by an underscore: _
 * Any duplicated code is moved to a function and stored in the functions folder associated with the script and the script is adjsuted to call the function.
 * Before writing code or creating a new function, check to see if there is an existing function that will work in the global functions directory and copy it to the script functions directory by checking the contents of the functions to see what they do.
-* Do not edit functions in the global functions directory unless explicitly directed to do so.
+* Do not edit functions in the global functions directory unless explicitly directed to change a function in that directory.
 * If a function must change to work for the existing script, create a new function and do not edit functions in the global functions directory.
 * A function only performs one task. If it contains multiple tasks it is split into multiple functions.
 * All variables in functions are declared with local scope.
