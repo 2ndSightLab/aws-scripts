@@ -52,6 +52,7 @@ __Bash scripts__
 * Function file names are all lowercase with _ separating words and ends with .sh
 * Script file names are all lowercase with - separating words adn ends with .sh
 * Include a banner at the top of using function/add_banner.sh
+* When adding names in banners use proper title capitalization and do not put _ or - between words.
 * Update banners that have changed in files that were not changed with functions/add_banner.sh so all files always have the correct banner.
 
 __Variables__
