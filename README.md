@@ -18,9 +18,12 @@ __Scripts folder__
 __Functions__
 
 * There can be (if needed) a functions folder within each script folder
-* The functions folder contains bash functions.
-* File names match function names plus a .sh extension.
+* The functions folder contains files that contain bash functions.
+* Each file in the functions folder matches the function name plus a .sh extension.
+* Each function nname is lower case with words separated by an underscore: _
+* Whenever a function is created it is copied to a functions folder in the root directory.
 * Before writing new code check to see if a function exists that can be used insted.
+* If a function must change to work for the existing script, create a new function.
 * Any duplicated code is moved to a function and scripts are adjsuted to call the function.
 * Before creating a new function check to see if a function already exists that can perform the neccessary task.
 * A function only performs one task. If it contains multiple tasks it is split into multiple functions.
