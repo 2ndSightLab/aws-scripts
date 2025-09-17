@@ -57,7 +57,7 @@ __Bash scripts__
 #
 #  Script name: [Script name] or Function name: [Function name]
 #  GitHub repository: https://github.com/2ndSightLab
-#  File: [File name]
+#  File: [File path]
 #  Copyright: © [year] 2nd Sight Lab
 # 
 #  [Description of what the code does]
