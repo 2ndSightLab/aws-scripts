@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Update System
+#  Name: Archive EC2 Keys
 #  GitHub repository: https://github.com/2ndSightLab
-#  File: update.sh
+#  File: ec2-keys.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Update system packages on EC2 instance
+#  Archive EC2 key pairs
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -21,20 +21,22 @@
 ################################################################
 
 
+cat <<'END_TEXT'
 
-# Update and upgrade system packages based on OS
-if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ]; then
-    # RHEL/CentOS/Amazon Linux
-    yum update -y
-elif [ -f /etc/debian_version ]; then
-    # Debian/Ubuntu
-    apt-get update -y
-    apt-get upgrade -y
-elif [ -f /etc/SuSE-release ]; then
-    # SUSE
-    zypper refresh
-    zypper update -y
-else
-    echo "Unsupported OS for package updates"
-    exit 1
-fi
+***************************
+SSH KEY Pairs
+***************************
+
+END_TEXT
+
+echo "Here are a list of the EC2 SSH keys:"
+echo ""
+aws ec2 describe-key-pairs --profile $archive_from region $region
+echo ""
+echo "Add the values of EC2 keys to Secrets Manager before archiving secrets"
+echo "if you want to retain the value of the key pairs. Note that you will"
+echo "have to obtain the private key from wherever it is stored. Also"
+echo "this command does not take into account key pairs created outside"
+echo "the AWS EC2 console."
+echo ""
+echo "Enter to continue. Ctrl-C to exit."

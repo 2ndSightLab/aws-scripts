@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Update System
+#  Name: Archive IAM Policies
 #  GitHub repository: https://github.com/2ndSightLab
-#  File: update.sh
+#  File: iam-policies.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Update system packages on EC2 instance
+#  Archive IAM policies
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -22,19 +22,26 @@
 
 
 
-# Update and upgrade system packages based on OS
-if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ]; then
-    # RHEL/CentOS/Amazon Linux
-    yum update -y
-elif [ -f /etc/debian_version ]; then
-    # Debian/Ubuntu
-    apt-get update -y
-    apt-get upgrade -y
-elif [ -f /etc/SuSE-release ]; then
-    # SUSE
-    zypper refresh
-    zypper update -y
-else
-    echo "Unsupported OS for package updates"
-    exit 1
-fi
+cat <<'END_TEXT'
+
+***************************
+IAM Roles 
+***************************
+
+You can transfer some or all of the policies in this account
+to the new account but note that the principals have to exist
+and if deleted, will be turned into an unusable logical ID.
+Instead, if you plan to use the policies in the future, 
+recreate them in the new archive account using users or roles
+in the archive account if needed, or store the policies
+in an SSM parameter for future reference.
+
+END_TEXT
+
+aws iam list-policies --profile $archive_from --region $region \
+  --scope Local \
+  --query "Policies[].PolicyName" \
+  --output text \
+  | xargs -n 1
+
+read -p "Copy or recreate the above policies as needed. Ctrl-C to exit" ok

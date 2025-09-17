@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Update System
+#  Name: Archive IAM Users
 #  GitHub repository: https://github.com/2ndSightLab
-#  File: update.sh
+#  File: iam-users.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Update system packages on EC2 instance
+#  Archive IAM users
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -22,19 +22,20 @@
 
 
 
-# Update and upgrade system packages based on OS
-if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ]; then
-    # RHEL/CentOS/Amazon Linux
-    yum update -y
-elif [ -f /etc/debian_version ]; then
-    # Debian/Ubuntu
-    apt-get update -y
-    apt-get upgrade -y
-elif [ -f /etc/SuSE-release ]; then
-    # SUSE
-    zypper refresh
-    zypper update -y
-else
-    echo "Unsupported OS for package updates"
-    exit 1
-fi
+cat <<'END_TEXT'
+
+***************************
+IAM Users 
+***************************
+
+You may want a record of the IAM user names in this account
+in case they appear in any logs or you need to replicate
+them again later. Here are a list of the IAM users in this account:
+
+END_TEXT
+
+aws iam list-users --profile $archive_from --region $region --query "Users[].UserName" --output text \
+  | xargs -n 1
+
+read -p "Copy the names of the roles into a parameter or secret if needed. \
+  Enter to continue. Ctrl-C to exit" ok

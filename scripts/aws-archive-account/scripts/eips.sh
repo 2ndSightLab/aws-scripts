@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Update System
+#  Name: Archive EIPs
 #  GitHub repository: https://github.com/2ndSightLab
-#  File: update.sh
+#  File: eips.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Update system packages on EC2 instance
+#  Archive Elastic IP addresses
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -21,20 +21,30 @@
 ################################################################
 
 
+cat <<'END_TEXT'
 
-# Update and upgrade system packages based on OS
-if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ]; then
-    # RHEL/CentOS/Amazon Linux
-    yum update -y
-elif [ -f /etc/debian_version ]; then
-    # Debian/Ubuntu
-    apt-get update -y
-    apt-get upgrade -y
-elif [ -f /etc/SuSE-release ]; then
-    # SUSE
-    zypper refresh
-    zypper update -y
-else
-    echo "Unsupported OS for package updates"
-    exit 1
-fi
+***************************
+Elastic IP Addresses (EIPs)
+***************************
+END_TEXT
+
+read -p "Do you want to copy any EIPs? " copy
+
+if [ "$copy" == "y" ]; then 
+
+cat <<'END_TEXT'
+
+You might want a record of the EIPs that may exist in
+logs or have been used in firewall rules, DNS records,
+or other configurations. Here is a list of the EIPs 
+in this account: 
+
+END_TEXT
+
+aws ec2 describe-addresses --profile $archive_from --region $region \
+  --query 'Addresses[*].{Name:Tags[?Key==`Name`].Value | [0], PublicIp:PublicIp}' --output text
+
+read -p "If you want a record of the EIPs copy to a secret or parameter. Enter to continue. Ctrl-C to exit)" ok
+
+fi #end if copy
+copy=""
