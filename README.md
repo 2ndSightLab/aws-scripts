@@ -44,8 +44,9 @@ __Bash scripts__
 * All bash scripts have a shebang and a -e to fail on error.
 * Function file names are all lowercase with _ separating words and ends with .sh
 * Script file names are all lowercase with - separating words adn ends with .sh
-* Include a banner at the top of each file that looks like this, replacing all values in brackets [] with the appropriate value.
+* Include a banner at the top of each file that looks like the following code (without the ```), replacing all values in brackets [] with the appropriate value.
 
+```
 -----------------------------------------------------
 + Script name: [Script name] or Function name: [Function name]
 + GitHub repository: https://github.com/2ndSightLab
@@ -59,6 +60,7 @@ __Bash scripts__
 + is provided "as is," without any warranty, and the author cannot be held liable 
 + for any damages or claims arising from its use.
 -----------------------------------------------------
+```
 
 __Variables__
 
