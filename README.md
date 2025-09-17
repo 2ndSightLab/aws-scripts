@@ -17,18 +17,18 @@ __Scripts folder__
 
 __Functions__
 
-* There can be (if needed) a functions folder within each script folder
-* The functions folder contains files that contain bash functions.
-* Each file in the functions folder matches the function name plus a .sh extension.
-* Each function nname is lower case with words separated by an underscore: _
-* Whenever a function is created it is copied to a functions folder in the root directory.
-* Before writing new code check to see if a function exists that can be used insted.
-* If a function must change to work for the existing script, create a new function.
-* Any duplicated code is moved to a function and scripts are adjsuted to call the function.
-* Before creating a new function check to see if a function already exists that can perform the neccessary task.
+* A folder named /functions in the root of this repository contains bash functions used by these scripts.
+* If a script uses funcitons, a /functions folder exists within the folder for that script.
+* Each function name is lower case with words separated by an underscore: _
+* Any duplicated code is moved to a function and stored in the functions folder associated with the script and the script is adjsuted to call the function.
+* Before writing code or creating a new function, check to see if there is an existing function that will work in the global functions directory and copy it to the script functions directory by checking the contents of the functions to see what they do.
+* Do not edit functions in the global functions directory unless explicitly directed to do so.
+* If a function must change to work for the existing script, create a new function and do not edit functions in the global functions directory.
 * A function only performs one task. If it contains multiple tasks it is split into multiple functions.
 * All variables in functions are declared with local scope.
-
+* Check that each argument passed to the function is set when required and is the correct type.
+* If an argument is an AWS value check that it meets the criteria specifed in the AWS documentation.
+  
 __Color__
 
 * Turn color off on every AWS command with output using:  --color off
@@ -41,13 +41,30 @@ __Recursion__
   
 __Bash scripts__
 
-* All file and function names are lowercase with a _ between words and scripts end with .sh
 * All bash scripts have a shebang and a -e to fail on error.
+* Function file names are all lowercase with _ separating words and ends with .sh
+* Script file names are all lowercase with - separating words adn ends with .sh
+* Include a banner at the top of each file that looks like this, replacing all values in brackets [] with the appropriate value.
+
+-----------------------------------------------------
++ Script name: [Script name] or Function name: [Function name]
++ GitHub repository: https://github.com/2ndSightLab
++ File: [File name]
++ Copyright: © [year] 2nd Sight Lab
++
++ This software is free for personal, educational, and non-profit use, provided that 
++ the included copyright notice is retained in all copies or substantial portions of 
++ the software. This license, however, does not grant permission for any commercial use, 
++ which requires obtaining a separate commercial license from the author. The software 
++ is provided "as is," without any warranty, and the author cannot be held liable 
++ for any damages or claims arising from its use.
+-----------------------------------------------------
 
 __Variables__
 
 * All variables should be upper case with each word separated with _.
-* When propmting for variable avlues, use a while loop to prompt until a valid value is set.
+* When propmting for variable values, use a while loop to prompt until a valid value is set.
+* Add an empty line before each prompt for a user to enter a value.
 * Check all variables to make sure they are set.
 * Check all variable values used as AWS CLI command arguments to make sure they are set with proper values according to the AWS documentation.
 * Check any variables that are used in code that requires a specific data type to make sure the variable is the correct data type.
@@ -69,8 +86,20 @@ __AWS Policies__
   
 __AWS Services__
 
-* When creating a list of AWS services use this command: grep "AVAILABLE SERVI" -A1900 | grep o | cut -d " " -f9- | grep -v 'aws help topics'
+* When creating a list of AWS services create a function and use this command: grep "AVAILABLE SERVI" -A1900 | grep o | cut -d " " -f9- | grep -v 'aws help topics'
+* Once the function is creeated delete the __AWS Service section of the readme and add the function to the Functions Description list and description.
 
 __Security__
 
 * Check for an alert on any security vulnerabilities when generating code including generated or requested code or vulnerabilities in the AWS tools or console.
+
+__Function Descriptions__
+
+* And time a function is created add it to the list below with the function name and description like this:
+
+-----------------------------------------------------
+Function name: [Name of Function]
+Description: [Description]
+-----------------------------------------------------
+
+
