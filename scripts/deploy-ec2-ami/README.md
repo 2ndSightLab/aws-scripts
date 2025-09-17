@@ -5,7 +5,7 @@ Create a bash script that deploys an EC2 instance from an AMI with comprehensive
 
 ## Requirements
 - Script name: run.sh
-- Must follow all repository standards from main README.md
+- Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
 
 ## Implementation Flow
 
