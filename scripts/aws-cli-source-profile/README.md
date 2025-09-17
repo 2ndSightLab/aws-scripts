@@ -1,7 +1,16 @@
 # AWS CLI Source Profile Script
 
-## Purpose
-Create a bash script that sets up AWS CLI profiles by sourcing credentials from existing profiles.
+__Summary__
+
+Create a profile configured with AWS developer credentials. Best practice is to ONLY give those
+credentials permission to assume a role with MFA and preferrably also restricted to specific IP
+address(es). Then create a separate AWS CLI profile to assume a role with MFA using this script:
+https://github.com/2ndSightLab/aws-scripts/tree/main/scripts/aws-cli-role-profile
+
+__Context__
+
+* Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
+* Must follow all script standards in https://github.com/2ndSightLab/aws-scripts/blob/main/scripts/README.md
 
 ## Requirements
 - Script name: `run.sh`
