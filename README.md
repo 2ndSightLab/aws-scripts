@@ -103,8 +103,8 @@ __Function Descriptions__
 
 * And time a function is created add it to the list below with the function name and description like this with a space between each function.
 
-*Function name:* [Name of Function]\
-*Description:* [Description]
+**[Name of Function]**\
+[Description]
 
 
 
