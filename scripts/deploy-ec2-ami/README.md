@@ -27,7 +27,7 @@ __Context__
 - Ask user which architecture
 - Ask if user wants to see AMI list
 - If yes: display unique list showing AMI names filtered in two steps: 1) select value before first slash, 2) select part before first number (or second number if name starts with amzn2), 3) remove trailing dashes
-- Make sure Amazon 2023 is in the list!
+- Make sure Amazon 2023 amis are in the list!
 - Ask user to select AMI name prefix
 - Display list of AMI IDs, names, and descriptions from newest to oldest that match the selected AMI name prefix
 - Prompt for AMI ID
