@@ -23,20 +23,23 @@
 
 
 # Detect OS and disable IPv6
-if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ]; then
+if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ]|| grep -q "Amazon Linux 2" /etc/os-release; then
     # RHEL/CentOS/Amazon Linux
-    echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-    echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
-    sysctl -p
+    sudo  sh -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf'
+    sudo  sh -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf'
+    sudo sysctl -p
+    sudo grubby --update-kernel=ALL --args="ipv6.disable=1"
 elif [ -f /etc/debian_version ]; then
     # Debian/Ubuntu
-    echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-    echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+    sudo sh -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf'
+    sudo sh -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf'
+    sudo echo "GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash ipv6.disable=1\"" >> /etc/default/grub
+    sudo echo "GRUB_CMDLINE_LINUX=\"ipv6.disable=1\"" >> /etc/default/grub
     sysctl -p
 elif [ -f /etc/SuSE-release ]; then
     # SUSE
-    echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-    echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+    sudo sh -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf'
+    sudo sh -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf'
     sysctl -p
 else
     echo "Unsupported OS for IPv6 disable"
