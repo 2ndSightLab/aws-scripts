@@ -1,6 +1,5 @@
 #!/bin/bash -e
 
-sudo su ec2-user
 THIS_DIR=$(pwd)
 cd /home/ec2-user
 
@@ -52,8 +51,6 @@ EOF
 
 cd /home/ec2-user
 echo 'colo tr' > ~/.vimrc
-
-sudo su
 
 cd $THIS_DIR
 
