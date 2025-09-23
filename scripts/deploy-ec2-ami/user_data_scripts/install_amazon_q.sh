@@ -27,6 +27,9 @@ DOWNLOAD_URL=""
 OS=""
 VERSION_ID=""
 THIS_DIR=$(pwd)
+
+sudo su ec2-user
+
 cd /home/ec2-user
 
 if ! ldd --version 2>&1 | head -n 1 | grep -q 'GLIBC 2.3[4-9]'; then
@@ -93,4 +96,5 @@ esac
 # Verify installation
 q --version
 
-CD $THIS_DIR
+cd $THIS_DIR
+sudo su

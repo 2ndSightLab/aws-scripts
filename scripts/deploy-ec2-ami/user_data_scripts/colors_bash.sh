@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+sudo su ec2-user
 THIS_DIR=$(pwd)
 cd /home/ec2-user
 # run this before installing Amazon Q"
@@ -36,7 +37,8 @@ echo "alias aws='aws --color off'" >> ~/.bashrc
 echo "alias git='git -c color.ui=never'" >> ~/.bashrc
 echo "#If you installed Amazon Q make sure that line is at the bottom of bashrc" >> ~/.bashrc
 
-source /.bashrc
+source ~/.bashrc
 echo "all font should be white. If it is not trying executing source ~/.bashrc again."
 
 cd $THIS_DIR
+sudo su

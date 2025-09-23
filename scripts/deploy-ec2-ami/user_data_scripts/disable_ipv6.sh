@@ -25,9 +25,6 @@
 # Detect OS and disable IPv6
 if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ]|| grep -q "Amazon Linux 2" /etc/os-release; then
     # RHEL/CentOS/Amazon Linux
-    sudo  sh -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf'
-    sudo  sh -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf'
-    sudo sysctl -p
     sudo grubby --update-kernel=ALL --args="ipv6.disable=1"
 elif [ -f /etc/debian_version ]; then
     # Debian/Ubuntu
