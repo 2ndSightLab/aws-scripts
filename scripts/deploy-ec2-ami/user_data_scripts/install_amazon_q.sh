@@ -20,7 +20,28 @@
 # 
 ################################################################
 
+DOWNLOAD_FILE="q.zip"
+VERSION=""
+ARCH=""
+DOWNLOAD_URL=""
+OS=""
+VERSION_ID=""
 
+if ! ldd --version 2>&1 | head -n 1 | grep -q 'GLIBC 2.3[4-9]'; then
+    VERSION="-musl"
+fi
+
+case "$(uname -m)" in
+    x86_64) ARCH="x86_64-linux" ;;
+    aarch64) ARCH="aarch64-linux" ;;
+    *) echo "Unsupported architecture." >&2; exit 1 ;;
+esac
+
+DOWNLOAD_URL="https://desktop-release.q.us-east-1.amazonaws.com/latest/q-${ARCH}${VERSION}.zip"
+
+if ! command -v curl &> /dev/null; then
+ echo "Curl is not installed"; exit 1
+fi
 
 # Detect OS
 if [ -f /etc/os-release ]; then
@@ -34,19 +55,32 @@ fi
 
 # Install Amazon Q based on OS
 case $OS in
-    "ubuntu")
-        apt-get update
-        curl -sSL https://aws-dev-tools-downloads.s3.us-east-1.amazonaws.com/amazon-q/latest/linux/amd64/amazon-q-linux-amd64.tar.gz -o /tmp/amazon-q.tar.gz
-        tar -xzf /tmp/amazon-q.tar.gz -C /tmp/
-        mv /tmp/q /usr/local/bin/
-        chmod +x /usr/local/bin/q
-        ;;
-    "amzn"|"rhel"|"centos")
-        yum update -y
-        curl -sSL https://aws-dev-tools-downloads.s3.us-east-1.amazonaws.com/amazon-q/latest/linux/amd64/amazon-q-linux-amd64.tar.gz -o /tmp/amazon-q.tar.gz
-        tar -xzf /tmp/amazon-q.tar.gz -C /tmp/
-        mv /tmp/q /usr/local/bin/
-        chmod +x /usr/local/bin/q
+        "ubuntu"|"amzn"|"rhel"|"centos")
+        if ! curl -sSL --tlsv1.2 --proto '=https' $DOWNLOAD_URL -o $DOWNLOAD_FILE; then
+           echo "Error: Download failed for $DOWNLOAD_URL" >&2
+           return 1
+        fi
+
+        if [ ! -s "$DOWNLOAD_FILE" ]; then
+          echo "Error: Downloaded file is empty or missing." >&2
+          # Optional: remove the empty file
+          rm -f "$DOWNLOAD_FILE"
+          return 1
+        fi
+
+        echo "Successfully downloaded $DONWLOAD_FILE"
+
+        echo "Files in tmp:"
+        ls -al
+
+        echo "Check file:"
+        file $DOWNLOAD_FILE
+
+        echo "Unzip file"
+        unzip $DOWNLOAD_FILE
+
+        echo "Install /q/install.sh"
+        ./q/install.sh --no-confirm
         ;;
     *)
         echo "Unsupported OS: $OS"
@@ -55,4 +89,5 @@ case $OS in
 esac
 
 # Verify installation
+q --version
 /usr/local/bin/q --version
