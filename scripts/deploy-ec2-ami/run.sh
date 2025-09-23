@@ -394,6 +394,7 @@ done
 
 USER_DATA_FILE="/tmp/userdata_$(date +%s).sh"
 echo "#!/bin/bash" > "$USER_DATA_FILE"
+echo "sleep 30  # Wait for network initialization"
 for script in "${USER_DATA_SCRIPTS[@]}"; do
     cat "user_data_scripts/$script" >> "$USER_DATA_FILE"
 done
