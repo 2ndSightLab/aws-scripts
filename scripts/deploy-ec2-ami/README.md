@@ -21,7 +21,7 @@ __Context__
 
 ### 2. AMI Selection
 - Ask user: private AMI or AWS AMI
-- List available operating systems for user selection
+- List available operating systems for user selection but only the most up to date operating system version
 - Ask user which operating system
 - List available architectures for user selection  
 - Ask user which architecture
