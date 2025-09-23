@@ -32,6 +32,8 @@ sudo su ec2-user
 
 cd /home/ec2-user
 
+HOME='/home/ec2-user'
+
 if ! ldd --version 2>&1 | head -n 1 | grep -q 'GLIBC 2.3[4-9]'; then
     VERSION="-musl"
 fi
