@@ -26,9 +26,10 @@ ARCH=""
 DOWNLOAD_URL=""
 OS=""
 VERSION_ID=""
-THIS_DIR=$(pwd)
 
-sudo su - ec2-user
+sudo -u ec2-user bash << 'EOF'
+
+THIS_DIR=$(pwd)
 
 cd /home/ec2-user
 
@@ -97,4 +98,4 @@ esac
 q --version
 
 cd $THIS_DIR
-sudo su
+EOF
