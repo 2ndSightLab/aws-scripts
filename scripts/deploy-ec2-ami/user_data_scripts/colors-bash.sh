@@ -1,5 +1,6 @@
 #!/bin/bash -e
 # run this before installing Amazon Q"
+echo "Only run this once! If you need to run it again first clear out the content it added to ~.bashrc"
 echo ''  >> ~/.bashrc
 echo '#remove docker color madness' >> ~/.bashrc
 echo "export NO_COLOR=true" >> ~/.bashrc
