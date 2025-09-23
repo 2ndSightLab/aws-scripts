@@ -115,7 +115,7 @@ while [ -z "$OS_SELECTION" ]; do
     echo "Select operating system (1-4):"
     read OS_SELECTION
     case $OS_SELECTION in
-        1) OS_FILTER="amzn*" ;;
+        1) OS_FILTER="a*" ;;
         2) OS_FILTER="ubuntu*" ;;
         3) OS_FILTER="Windows*" ;;
         4) OS_FILTER="RHEL*" ;;
@@ -144,8 +144,8 @@ if [ "$SHOW_AMIS" = "y" ]; then
     echo ""
     echo "Available AMI name prefixes:"
     AMI_PREFIXES=($(aws ec2 describe-images --owners amazon --region "$REGION" --profile "$PROFILE" --filters "Name=name,Values=$OS_FILTER" "Name=architecture,Values=$ARCH_FILTER" --query 'Images[*].Name' --output text --color off | tr '\t' '\n' | cut -d'/' -f1 | awk '{
-        if ($0 ~ /^amzn2/) {
-            # For amzn2, stop at second number
+        if ($0 ~ /^amzn2/ || $0 ~ /^al2023/) {
+            # For amzn2 and al2023, stop at second number
             gsub(/-[0-9][^0-9]*[0-9].*$/, "", $0)
         } else {
             # For others, stop at first number
@@ -173,12 +173,21 @@ if [ "$SHOW_AMIS" = "y" ]; then
     
     echo ""
     echo "Matching AMIs (newest to oldest):"
-    aws ec2 describe-images --owners amazon --region "$REGION" --profile "$PROFILE" --filters "Name=name,Values=${AMI_NAME_SELECTION}*" "Name=architecture,Values=$ARCH_FILTER" --query 'Images | sort_by(@, &CreationDate) | reverse(@)[*].[ImageId,Name,Description]' --output table --color off
+    
+    # Set specific filter for al2023-ami to only show standard AMIs
+    if [ "$AMI_NAME_SELECTION" = "al2023-ami" ]; then
+        AMI_NAME_FILTER="al2023-ami-2023*"
+    else
+        AMI_NAME_FILTER="${AMI_NAME_SELECTION}*"
+    fi
+    
+    aws ec2 describe-images --owners amazon --region "$REGION" --profile "$PROFILE" --filters "Name=name,Values=$AMI_NAME_FILTER" "Name=architecture,Values=$ARCH_FILTER" --query 'Images | sort_by(@, &CreationDate) | reverse(@)[*].[ImageId,Name,Description]' --output table --color off
     
     # Get the latest AMI ID for default selection
-    LATEST_AMI=$(aws ec2 describe-images --owners amazon --region "$REGION" --profile "$PROFILE" --filters "Name=name,Values=${AMI_NAME_SELECTION}*" "Name=architecture,Values=$ARCH_FILTER" --query 'Images | sort_by(@, &CreationDate) | reverse(@)[0].ImageId' --output text --color off)
+    LATEST_AMI=$(aws ec2 describe-images --owners amazon --region "$REGION" --profile "$PROFILE" --filters "Name=name,Values=$AMI_NAME_FILTER" "Name=architecture,Values=$ARCH_FILTER" --query 'Images | sort_by(@, &CreationDate) | reverse(@)[0].ImageId' --output text --color off)
 fi
 
+echo ""
 while [ -z "$AMI_ID" ]; do
     if [ -n "$LATEST_AMI" ]; then
         echo "Enter AMI ID (press enter for latest: $LATEST_AMI):"
