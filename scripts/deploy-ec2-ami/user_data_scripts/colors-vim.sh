@@ -1,5 +1,9 @@
 #!/bin/bash -e
 
+
+THIS_DIR=$(pwd)
+cd /home/ec2-user
+
 OUTPUT_FILE="tr.vim"
 if [ ! -d ~/.vim ]; then mkdir ~/.vim; fi
 if [ ! -d ~/.vim/colors ]; then mkdir ~/.vim/colors; fi
@@ -46,6 +50,8 @@ hi Error ctermfg=Yellow
 hi ToDo ctermfg=LightGrey
 EOF
 
-cd ~
-
+cd /home/ec2-user
 echo 'colo tr' > ~/.vimrc
+
+cd $THIS_DIR
+
