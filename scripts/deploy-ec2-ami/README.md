@@ -3,6 +3,9 @@
 __Summary__
 Create a bash script that deploys an EC2 instance from an AMI with comprehensive selection options.
 
+__Notes__
+9/23/25 - Original version of this script written by Q provides an outdated, end of life verion of Amazon Linux in the query it produced. Fixing now to get the most current version at the time of this writing (Amazon Linux 2023)
+
 __Context__
 * Script name: run.sh
 * Must follow all repository standards in https://github.com/2ndSightLab/aws-scripts/blob/main/README.md
