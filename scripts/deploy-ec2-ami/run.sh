@@ -35,7 +35,7 @@ done
 
 # Add timestamp to AMI name
 TIMESTAMP=$(date +%Y%m%d-%H%M)
-AMI_NAME_WITH_TIMESTAMP="${AMI_NAME}-${TIMESTAMP}"
+AMI_NAME="${AMI_NAME}-${TIMESTAMP}"
 
 # 1. Profile Setup
 echo "Available CLI profiles:"
@@ -538,7 +538,7 @@ INSTANCE_ID=$(aws ec2 run-instances \
     --security-group-ids "$SECURITY_GROUP_ID" \
     --subnet-id "$SUBNET_ID" \
     --user-data "file://$USER_DATA_FILE" \
-    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=create-ami-$AMI_NAME_WITH_TIMESTAMP}]" \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=create-ami-$AMI_NAME}]" \
     --block-device-mappings "$block_device_mappings" \
     --region "$REGION" \
     --profile "$PROFILE" \
@@ -554,7 +554,8 @@ echo "wait for user data to complete"
 MAX_ATTEMPTS=8
 SLEEP_INTERVAL=15
 LOOP_COUNT=0
-while ! aws ec2 get-console-output --instance-id $INSTANCE_ID --region "$REGION" --profile "$PROFILE" --output text | grep -q ".*Cloud-init.*finished at.*"; do 
+
+while ! aws ec2 get-console-output --latest --instance-id $INSTANCE_ID --region "$REGION" --profile "$PROFILE" --output text | grep -i 'cloud-init*.*finished at'; do 
   echo "Waiting for cloud-init to finish... (attempt $((LOOP_COUNT + 1))/$MAX_ATTEMPTS)"
   sleep $SLEEP_INTERVAL
   LOOP_COUNT=$((LOOP_COUNT + 1))
@@ -562,6 +563,7 @@ while ! aws ec2 get-console-output --instance-id $INSTANCE_ID --region "$REGION"
     echo "Timeout: Cloud-init did not complete after $MAX_ATTEMPTS attempts ($((MAX_ATTEMPTS * SLEEP_INTERVAL / 60)) minutes). Continue."
     break
   fi
+
 done && echo "Cloud-init completed! Safe to stop instance."
 
 echo "Stopping the instance..."
@@ -570,12 +572,12 @@ aws ec2 stop-instances --instance-ids "$INSTANCE_ID" --region "$REGION" --profil
 echo "Waiting for instance to stop..."
 aws ec2 wait instance-stopped --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
 
-echo "Creating AMI: $AMI_NAME_WITH_TIMESTAMP"
+echo "Creating AMI: $AMI_NAME"
 NEW_AMI=$(aws ec2 create-image \
     --instance-id "$INSTANCE_ID" \
-    --name "$AMI_NAME_WITH_TIMESTAMP" \
+    --name "$AMI_NAME" \
     --description "AMI created from instance $INSTANCE_ID" \
-    --tag-specifications "ResourceType=image,Tags=[{Key=Name,Value=$AMI_NAME_WITH_TIMESTAMP}]" \
+    --tag-specifications "ResourceType=image,Tags=[{Key=Name,Value=$AMI_NAME}]" \
     --region "$REGION" \
     --profile "$PROFILE" \
     --query 'ImageId' \
