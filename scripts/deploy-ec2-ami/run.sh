@@ -394,10 +394,11 @@ done
 
 USER_DATA_FILE="/tmp/userdata_$(date +%s).sh"
 echo "#!/bin/bash" > "$USER_DATA_FILE"
-echo "sleep 30  # Wait for network initialization"
+echo "sleep 15  # Wait for network initialization"
 for script in "${USER_DATA_SCRIPTS[@]}"; do
     cat "user_data_scripts/$script" >> "$USER_DATA_FILE"
 done
+echo "echo 'USER_DATA_COMPLETE'" >> $USER_DATA_FILE"
 
 # Replace placeholders
 while grep -q "{{prompt:" "$USER_DATA_FILE"; do
@@ -542,6 +543,9 @@ echo "Instance launched: $INSTANCE_ID"
 echo "Waiting for instance to be running..."
 aws ec2 wait instance-running --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
 echo "Instance is now running."
+
+#wait for user data to complete
+while ! aws ec2 get-console-output --instance-id $INSTANCE_ID | grep -q "USER_DATA_COMPLETE"; do echo "Waiting for user data to complete..."; sleep 30; done && echo "User data completed! Safe to stop instance."
 
 echo "Stopping the instance..."
 aws ec2 stop-instances --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
