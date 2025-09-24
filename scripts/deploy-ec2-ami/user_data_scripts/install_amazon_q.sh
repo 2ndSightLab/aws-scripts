@@ -20,15 +20,14 @@
 # 
 ################################################################
 
+sudo -u ec2-user bash << 'EOF'
+
 DOWNLOAD_FILE="q.zip"
 VERSION=""
 ARCH=""
 DOWNLOAD_URL=""
 OS=""
 VERSION_ID=""
-
-sudo -u ec2-user bash << 'EOF'
-
 THIS_DIR=$(pwd)
 
 cd /home/ec2-user
@@ -94,8 +93,7 @@ case $OS in
         ;;
 esac
 
-# Verify installation
-q --version
-
 cd $THIS_DIR
 EOF
+
+q --version
