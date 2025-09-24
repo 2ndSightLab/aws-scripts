@@ -1,13 +1,18 @@
 #!/bin/bash -e
-
+sudo -u ec2-user bash << 'EOF'
 THIS_DIR=$(pwd)
+
 cd /home/ec2-user
+echo 'colo tr' > ~/.vimrc
 
 OUTPUT_FILE="tr.vim"
 if [ ! -d ~/.vim ]; then mkdir ~/.vim; fi
 if [ ! -d ~/.vim/colors ]; then mkdir ~/.vim/colors; fi
 if [ ! -f ~/.vim/colors/$OUTPUT_FILE ]; then touch ~/.vim/colors/$OUTPUT_FILE; fi
 cd ~/.vim/colors
+EOF
+
+OUTPUT_FILE="/home/ec2-user/.vim/colors/tr.vim"
 
 cat > "$OUTPUT_FILE" << 'EOF'
 " Howto: https://medium.com/cloud-security/changing-vim-colors-and-risks-in-vim-colors-files-from-the-internet-b0276a0fc38e
@@ -48,9 +53,4 @@ hi Ignore ctermfg=White
 hi Error ctermfg=Yellow
 hi ToDo ctermfg=LightGrey
 EOF
-
-cd /home/ec2-user
-echo 'colo tr' > ~/.vimrc
-
-cd $THIS_DIR
 

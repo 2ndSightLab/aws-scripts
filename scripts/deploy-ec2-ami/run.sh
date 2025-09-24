@@ -392,15 +392,23 @@ while true; do
     fi
 done
 
+
 USER_DATA_FILE="/tmp/userdata_$(date +%s).sh"
-echo "#!/bin/bash" > "$USER_DATA_FILE"
-echo "sleep 15  # Wait for network initialization"
+
+echo "Add shebang to user data file"
+echo "#!/bin/bash -e" > "$USER_DATA_FILE"
+
+echo "Add sleep 5 to wait for network init in user data script."
+echo "sleep 5" >> "$USER_DATA_FILE"
+
+echo "concatenate scripts in user data file"
 for script in "${USER_DATA_SCRIPTS[@]}"; do
     cat "user_data_scripts/$script" >> "$USER_DATA_FILE"
 done
-echo "echo 'USER_DATA_COMPLETE'" >> $USER_DATA_FILE"
+echo "Add user data complete in user data file"
+echo "echo 'USER_DATA_COMPLETE'" >> "$USER_DATA_FILE"
 
-# Replace placeholders
+echo "Replace placeholders in user data files"
 while grep -q "{{prompt:" "$USER_DATA_FILE"; do
     PLACEHOLDER=$(grep -o "{{prompt:[^}]*}}" "$USER_DATA_FILE" | head -1)
     PROMPT_TEXT=$(echo "$PLACEHOLDER" | sed 's/{{prompt:\s*//' | sed 's/}}//')
@@ -410,16 +418,13 @@ while grep -q "{{prompt:" "$USER_DATA_FILE"; do
     sed -i "s|$PLACEHOLDER|$PLACEHOLDER_VALUE|g" "$USER_DATA_FILE"
 done
 
-# 4. Security & Network Setup
 echo "Available KMS keys:"
 echo "+------------------------------------------------------------------------------+------------------------------+"
 echo "| ARN                                                                          | Alias                        |"
 echo "|------------------------------------------------------------------------------|------------------------------|"
 
-# Get all aliases first
 ALIASES_DATA=$(aws kms list-aliases --region "$REGION" --profile "$KMS_PROFILE" --query 'Aliases[?starts_with(AliasName, `alias/`) && TargetKeyId != null].[TargetKeyId,AliasName]' --output text)
 
-# Get all keys and process in parallel
 aws kms list-keys --region "$REGION" --profile "$KMS_PROFILE" --query 'Keys[*].KeyId' --output text | tr '\t' '\n' | xargs -P 5 -I {} bash -c '
     if [ -n "{}" ]; then
         KEY_INFO=$(aws kms describe-key --region "'"$REGION"'" --profile "'"$KMS_PROFILE"'" --key-id {} --query "[KeyMetadata.Arn,KeyMetadata.KeyManager]" --output text 2>/dev/null)
@@ -449,6 +454,7 @@ echo "Available EC2 key pairs:"
 aws ec2 describe-key-pairs --region "$REGION" --profile "$PROFILE" --query 'KeyPairs[*].KeyName' --output table --color off
 
 echo ""
+
 echo "Create new EC2 key pair? (y/n):"
 read CREATE_KEY
 if [ "$CREATE_KEY" = "y" ]; then
@@ -544,8 +550,19 @@ echo "Waiting for instance to be running..."
 aws ec2 wait instance-running --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
 echo "Instance is now running."
 
-#wait for user data to complete
-while ! aws ec2 get-console-output --instance-id $INSTANCE_ID | grep -q "USER_DATA_COMPLETE"; do echo "Waiting for user data to complete..."; sleep 30; done && echo "User data completed! Safe to stop instance."
+echo "wait for user data to complete"
+MAX_ATTEMPTS=8
+SLEEP_INTERVAL=15
+LOOP_COUNT=0
+while ! aws ec2 get-console-output --instance-id $INSTANCE_ID --region "$REGION" --profile "$PROFILE" --output text | grep -q ".*Cloud-init.*finished at.*"; do 
+  echo "Waiting for cloud-init to finish... (attempt $((LOOP_COUNT + 1))/$MAX_ATTEMPTS)"
+  sleep $SLEEP_INTERVAL
+  LOOP_COUNT=$((LOOP_COUNT + 1))
+  if [ $LOOP_COUNT -ge $MAX_ATTEMPTS ]; then
+    echo "Timeout: Cloud-init did not complete after $MAX_ATTEMPTS attempts ($((MAX_ATTEMPTS * SLEEP_INTERVAL / 60)) minutes). Continue."
+    break
+  fi
+done && echo "Cloud-init completed! Safe to stop instance."
 
 echo "Stopping the instance..."
 aws ec2 stop-instances --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"

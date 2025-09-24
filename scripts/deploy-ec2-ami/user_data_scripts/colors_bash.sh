@@ -1,4 +1,5 @@
 #!/bin/bash -e
+sudo -u ec2-user bash << 'EOF'
 
 THIS_DIR=$(pwd)
 cd /home/ec2-user
@@ -40,4 +41,5 @@ source ~/.bashrc
 echo "all font should be white. If it is not trying executing source ~/.bashrc again."
 
 cd $THIS_DIR
+EOF
 
