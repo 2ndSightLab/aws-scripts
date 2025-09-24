@@ -7,7 +7,7 @@ __Notes__
 
 9/23/25 - Original version of this script written by Q provides an outdated, end of life verion of Amazon Linux in the query it produced. Fixing now to get the most current version at the time of this writing (Amazon Linux 2023); none of the user-data scripts written by Q worked so I mostly manually fixed those.
 
-9/24/25 - The user data scripts were not working once run as part of instance intialization for the following reasons: Q install requires running as non-root user unlike every other app install practically on the planet. Why can't I just use yum (or dnf if I must?) I had to modify the colors to apply to the ec2-user rather than root also. I figured out that the instance was stopping before user data was complete even though the status changed to "initialized." Why??? Anyway I think it works now.
+9/24/25 - The user data scripts were not working once run as part of instance intialization for the following reasons: Q install requires running as non-root user unlike every other app install practically on the planet. Why can't I just use yum (or dnf if I must?) I had to modify the colors to apply to the ec2-user rather than root also. I figured out that the instance was stopping before user data was complete even though the status changed to "initialized." Why??? Anyway I think it works now. Also for log output via the CLI have to use --latest and output value MUST be text which seems odd. Why is latest not the default and if you're not going to allow JSON why no error message??
 
 __Context__
 * Script name: run.sh
