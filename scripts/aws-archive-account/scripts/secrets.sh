@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Archive Secrets
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: secrets.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

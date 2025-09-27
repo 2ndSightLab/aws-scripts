@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Archive S3 Buckets
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: s3-buckets.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

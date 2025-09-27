@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Deploy EC2 AMI
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: run.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
@@ -370,6 +370,9 @@ while [ -z "$INSTANCE_TYPE" ]; do
     read INSTANCE_TYPE
     if [ -z "$INSTANCE_TYPE" ]; then
         echo "ERROR: Instance type cannot be empty. Please enter a valid instance type."
+    elif [[ ! "$INSTANCE_TYPE" =~ ^[a-z0-9.]+$ ]]; then
+        echo "ERROR: Instance type must only contain lowercase letters, numbers, and periods."
+        INSTANCE_TYPE=""
     fi
 done
 
@@ -378,6 +381,9 @@ echo "Available user data scripts:"
 ls -1 user_data_scripts/
 
 USER_DATA_SCRIPTS=()
+TEMP_SCRIPT_DIR="/tmp/userdata_scripts_$(date +%s)"
+mkdir -p "$TEMP_SCRIPT_DIR"
+
 while true; do
     echo ""
     echo "Enter user data script file name (or press enter to finish):"
@@ -386,12 +392,41 @@ while true; do
         break
     fi
     if [ -f "user_data_scripts/$SCRIPT_NAME" ]; then
-        USER_DATA_SCRIPTS+=("$SCRIPT_NAME")
+        # Create unique temp filename with timestamp
+        ATTEMPTS=0
+        while [ $ATTEMPTS -lt 5 ]; do
+            TIMESTAMP=$(date +%s%N | cut -b1-13)  # milliseconds
+            TEMP_SCRIPT_NAME="${SCRIPT_NAME%.*}_${TIMESTAMP}.${SCRIPT_NAME##*.}"
+            TEMP_SCRIPT_PATH="$TEMP_SCRIPT_DIR/$TEMP_SCRIPT_NAME"
+            
+            if [ ! -f "$TEMP_SCRIPT_PATH" ]; then
+                cp "user_data_scripts/$SCRIPT_NAME" "$TEMP_SCRIPT_PATH"
+                USER_DATA_SCRIPTS+=("$TEMP_SCRIPT_NAME")
+                break
+            fi
+            
+            ATTEMPTS=$((ATTEMPTS + 1))
+            if [ $ATTEMPTS -lt 5 ]; then
+                sleep 1
+            else
+                echo "ERROR: Failed to create unique temp file after 5 attempts."
+                exit 1
+            fi
+        done
+        
+        # Replace placeholders in this script immediately
+        while grep -q "{{prompt:" "$TEMP_SCRIPT_PATH"; do
+            PLACEHOLDER=$(grep -o "{{prompt:[^}]*}}" "$TEMP_SCRIPT_PATH" | head -1)
+            PROMPT_TEXT=$(echo "$PLACEHOLDER" | sed 's/{{prompt:\s*//' | sed 's/}}//')
+            echo ""
+            echo "Enter value for $PROMPT_TEXT (in $SCRIPT_NAME):"
+            read PLACEHOLDER_VALUE
+            sed -i "s|$PLACEHOLDER|$PLACEHOLDER_VALUE|g" "$TEMP_SCRIPT_PATH"
+        done
     else
         echo "ERROR: Script file does not exist."
     fi
 done
-
 
 USER_DATA_FILE="/tmp/userdata_$(date +%s).sh"
 
@@ -403,20 +438,10 @@ echo "sleep 5" >> "$USER_DATA_FILE"
 
 echo "concatenate scripts in user data file"
 for script in "${USER_DATA_SCRIPTS[@]}"; do
-    cat "user_data_scripts/$script" >> "$USER_DATA_FILE"
+    grep -v '^[[:space:]]*#' "$TEMP_SCRIPT_DIR/$script" | grep -v '^[[:space:]]*$' | grep -v '^#!/bin/bash' >> "$USER_DATA_FILE"
 done
 echo "Add user data complete in user data file"
 echo "echo 'USER_DATA_COMPLETE'" >> "$USER_DATA_FILE"
-
-echo "Replace placeholders in user data files"
-while grep -q "{{prompt:" "$USER_DATA_FILE"; do
-    PLACEHOLDER=$(grep -o "{{prompt:[^}]*}}" "$USER_DATA_FILE" | head -1)
-    PROMPT_TEXT=$(echo "$PLACEHOLDER" | sed 's/{{prompt:\s*//' | sed 's/}}//')
-    echo ""
-    echo "Enter value for $PROMPT_TEXT:"
-    read PLACEHOLDER_VALUE
-    sed -i "s|$PLACEHOLDER|$PLACEHOLDER_VALUE|g" "$USER_DATA_FILE"
-done
 
 echo "Available KMS keys:"
 echo "+------------------------------------------------------------------------------+------------------------------+"
@@ -446,6 +471,21 @@ while [ -z "$KEY_ARN" ]; do
     read KEY_ARN
     if [ -z "$KEY_ARN" ]; then
         echo "ERROR: KMS key ARN cannot be empty."
+    fi
+done
+
+while [ -z "$VOLUME_SIZE" ]; do
+    echo ""
+    echo "Enter volume size in GB (default: 8):"
+    read VOLUME_SIZE_INPUT
+    if [ -z "$VOLUME_SIZE_INPUT" ]; then
+        VOLUME_SIZE="8"
+        echo "Using default volume size: $VOLUME_SIZE GB"
+    elif [[ "$VOLUME_SIZE_INPUT" =~ ^[0-9]+$ ]] && [ "$VOLUME_SIZE_INPUT" -gt 0 ]; then
+        VOLUME_SIZE="$VOLUME_SIZE_INPUT"
+    else
+        echo "ERROR: Volume size must be a positive integer."
+        VOLUME_SIZE=""
     fi
 done
 
@@ -527,7 +567,7 @@ while [ -z "$SUBNET_ID" ]; do
 done
 
 # 5. Launch & Display
-block_device_mappings='[{"DeviceName": "/dev/xvda","Ebs": {"Encrypted": true, "KmsKeyId": "'$KEY_ARN'"}}]'
+block_device_mappings='[{"DeviceName": "/dev/xvda","Ebs": {"VolumeSize": '$VOLUME_SIZE', "Encrypted": true, "KmsKeyId": "'$KEY_ARN'"}}]'
 echo "block_device_mappings: $block_device_mappings"
 
 echo "Launching instance..."
@@ -566,26 +606,16 @@ while ! aws ec2 get-console-output --latest --instance-id $INSTANCE_ID --region 
 
 done && echo "Cloud-init completed! Safe to stop instance."
 
-echo "Stopping the instance..."
-aws ec2 stop-instances --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
-
-echo "Waiting for instance to stop..."
-aws ec2 wait instance-stopped --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
-
-echo "Creating AMI: $AMI_NAME"
-NEW_AMI=$(aws ec2 create-image \
-    --instance-id "$INSTANCE_ID" \
-    --name "$AMI_NAME" \
-    --description "AMI created from instance $INSTANCE_ID" \
-    --tag-specifications "ResourceType=image,Tags=[{Key=Name,Value=$AMI_NAME}]" \
-    --region "$REGION" \
-    --profile "$PROFILE" \
-    --query 'ImageId' \
-    --output text)
-
-echo "AMI created: $NEW_AMI"
-
 aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --region "$REGION" --profile "$PROFILE"
+
+echo ""
+echo "Do you want to create an AMI from this instance? (y/n):"
+read CREATE_AMI
+if [ "$CREATE_AMI" = "y" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    source "$SCRIPT_DIR/../create-ec2-ami/run.sh"
+fi
 
 # Cleanup
 rm -f "$USER_DATA_FILE"
+rm -rf "$TEMP_SCRIPT_DIR"

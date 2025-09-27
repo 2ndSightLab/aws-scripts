@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: AWS Archive Account
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: run.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

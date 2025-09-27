@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Archive IAM Users
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: iam-users.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

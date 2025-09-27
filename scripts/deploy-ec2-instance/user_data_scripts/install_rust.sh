@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Install Rust
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: install_rust.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
@@ -22,7 +22,7 @@
 
 sudo -u ec2-user bash << 'EOF'
 
-sudo yum install glibc-devel
+sudo yum install glibc-devel -y
 sudo yum install gcc glibc-devel -y
 
 # Install Rust using rustup (official installer)

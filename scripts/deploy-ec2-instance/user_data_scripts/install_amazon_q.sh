@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Install Amazon Q
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: install_amazon_q.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
@@ -96,4 +96,4 @@ esac
 cd $THIS_DIR
 EOF
 
-q --version
+q --version || echo "Cannot check version of Amazon Q. May not be installed or need to login."

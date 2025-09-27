@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Share AMI
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: share_ami.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

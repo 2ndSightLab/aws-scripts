@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Configure CloudWatch Log Agent
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: configure_cloudwatch_log_agent.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
@@ -21,6 +21,7 @@
 ################################################################
 
 
+echo "THIS SCRIPT HAS NOT BEEN TESTED"
 
 # Detect OS
 if [ -f /etc/os-release ]; then

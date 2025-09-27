@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Create Local AMI
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: create_local_ami.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

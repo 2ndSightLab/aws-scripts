@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: AWS Service Role with MFA
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: aws-service-role-with-mfa.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

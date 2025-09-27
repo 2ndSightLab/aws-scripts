@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Launch Instance
+#  Name: Install Git
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: launch_instance.sh
+#  File: install_git.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Launch EC2 instance
+#  Install Git version control system
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -20,27 +20,4 @@
 # 
 ################################################################
 
-launch_instance(){
-  local ami_id="$1"
-  local key_pair_name="$2"
-  local security_group_id="$3"
-  local subnet_id="$4"
-  local kms_key="$5"
-  local archive_to="$6"
-  local region="$7"
-  local instance_size="$8"
-
-   local instance_id=$(aws ec2 run-instances --image-id "$ami_id" \
-    --instance-type "$instance_size" --key-name "$key_pair_name" \
-    --security-group-ids "$security_group_id" \
-    --subnet-id "$subnet_id" \
-    --block-device-mappings "$block_device_mappings" \
-    --query "Instances[0].InstanceId" \
-    --output text \
-    --region $region \
-    --profile "$archive_to" \
-    --color off 2>&1)
- 
-  echo "$instance_id"
-
-}
+sudo yum install git -y

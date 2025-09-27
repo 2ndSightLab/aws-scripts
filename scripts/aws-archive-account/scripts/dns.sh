@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Archive DNS
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: dns.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

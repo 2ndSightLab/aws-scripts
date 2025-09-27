@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Archive EC2 Keys
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: ec2-keys.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

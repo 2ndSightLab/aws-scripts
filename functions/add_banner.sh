@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: Add Banner
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: add_banner.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
@@ -75,7 +75,7 @@ add_banner() {
 ################################################################
 #
 $name_line
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: $(basename "$file")
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

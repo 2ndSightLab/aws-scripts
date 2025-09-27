@@ -2,7 +2,7 @@
 ################################################################
 #
 #  Name: View CloudTrail Errors
-#  GitHub repository: https://github.com/2ndSightLab
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: view-cloudtrail-errors.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 

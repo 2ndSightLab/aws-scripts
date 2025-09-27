@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Disable IPv6
-#  GitHub repository: https://github.com/2ndSightLab
-#  File: disable_ipv6.sh
+#  Name: Update System
+#  GitHub repository: https://github.com/2ndSightLab/aws-scripts
+#  File: update.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Disable IPv6 on EC2 instance
+#  Update system packages on EC2 instance
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -22,23 +22,19 @@
 
 
 
-# Detect OS and disable IPv6
-if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ]|| grep -q "Amazon Linux 2" /etc/os-release; then
+# Update and upgrade system packages based on OS
+if [ -f /etc/redhat-release ] || [ -f /etc/amazon-linux-release ] || grep -q "Amazon Linux 2" /etc/os-release; then
     # RHEL/CentOS/Amazon Linux
-    sudo grubby --update-kernel=ALL --args="ipv6.disable=1"
+    sudo yum update -y
 elif [ -f /etc/debian_version ]; then
     # Debian/Ubuntu
-    sudo sh -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf'
-    sudo sh -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf'
-    sudo echo "GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash ipv6.disable=1\"" >> /etc/default/grub
-    sudo echo "GRUB_CMDLINE_LINUX=\"ipv6.disable=1\"" >> /etc/default/grub
-    sysctl -p
+    sudo apt-get update -y
+    sudo apt-get upgrade -y
 elif [ -f /etc/SuSE-release ]; then
     # SUSE
-    sudo sh -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf'
-    sudo sh -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf'
-    sysctl -p
+    sudo zypper refresh
+    sudo zypper update -y
 else
-    echo "Unsupported OS for IPv6 disable"
+    echo "Unsupported OS for package updates"
     exit 1
 fi
