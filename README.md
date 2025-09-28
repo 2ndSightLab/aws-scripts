@@ -2,7 +2,13 @@
 
 __Summary__
 
-This repository contains bash scripts to do whatever is required on AWS. For the humans: These are instructions for Amazon Q below. For information on how this code is written and any caveats follow my blog (email or on Medium) at https://medium.com/cloud-security. Please support this blog by abiding by the license. If you want to use the code or context for commercial use drop me a line on LinkedIn and we can make arrangements. I'm reasonable. Thank you. :)
+This repository contains bash scripts to do whatever is required on AWS. 
+
+You can view a list of the available scripts on the Wiki
+
+https://github.com/2ndSightLab/aws-scripts/wiki/Avaialble-Scripts
+
+For the humans: These are instructions for Amazon Q below. For information on how this code is written and any caveats follow my blog (email or on Medium) at https://medium.com/cloud-security. Please support this blog by abiding by the license. If you want to use the code or context for commercial use drop me a line on LinkedIn and we can make arrangements. I'm reasonable. Thank you. :)
 
 __Global Context__
 
