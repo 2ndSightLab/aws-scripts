@@ -24,9 +24,12 @@ sudo -u ec2-user bash << 'EOF'
 
 sudo yum install glibc-devel -y
 sudo yum install gcc glibc-devel -y
+sudo yum install openssl-devel -y
+sudo yum install bc -y
 
-# Install Rust using rustup (official installer)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+# Install Rust using rustup (official installer) - non-interactive
+export RUSTUP_INIT_SKIP_PATH_CHECK=yes
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain stable --profile default -y
 
 # Source the cargo environment
 source ~/.cargo/env
@@ -59,4 +62,50 @@ grep -qF 'export PATH="$HOME/.cargo/bin:$PATH"' ~/.bashrc || echo 'export PATH="
 # Source bashrc to make Rust available immediately
 sudo -u ec2-user bash -c 'source /home/ec2-user/.bashrc'
 
-cargo install cargo-audit --locked
+# Function to check system resources
+check_resources() {
+    # Get available memory in MB
+    local available_mem=$(free -m | awk 'NR==2{print $7}')
+    # Get number of CPU cores
+    local cpu_cores=$(nproc)
+    # Get current load average (1 minute)
+    local load_avg=$(uptime | awk -F'load average:' '{print $2}' | awk -F',' '{print $1}' | xargs)
+    
+    echo "System Resources Check:"
+    echo "Available Memory: ${available_mem}MB"
+    echo "CPU Cores: ${cpu_cores}"
+    echo "Load Average: ${load_avg}"
+    
+    # Check if we have enough resources for tarpaulin
+    # Minimum requirements: 1GB RAM available, load < 2x cores
+    local min_mem=1024
+    local max_load=$(echo "${cpu_cores} * 2" | bc -l)
+    
+    if (( available_mem >= min_mem )) && (( $(echo "${load_avg} < ${max_load}" | bc -l) )); then
+        echo "✓ Sufficient resources for tarpaulin installation"
+        return 0
+    else
+        echo "✗ Insufficient resources for tarpaulin installation"
+        echo "  Need: ${min_mem}MB RAM, Load < ${max_load}"
+        return 1
+    fi
+}
+
+cargo install cargo-audit
+cargo install cargo-license
+
+# Check resources before installing tarpaulin
+if check_resources; then
+    echo "Installing cargo-tarpaulin..."
+    cargo install cargo-tarpaulin
+else
+    echo "Skipping cargo-tarpaulin installation due to insufficient resources"
+fi
+
+# Install miri (ARM64 requires nightly, x86_64 can use stable)
+if [[ $(uname -m) == "aarch64" ]]; then
+    rustup toolchain install nightly
+    rustup +nightly component add miri
+else
+    rustup component add miri
+fi
