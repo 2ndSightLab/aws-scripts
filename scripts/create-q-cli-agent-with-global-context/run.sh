@@ -1,0 +1,65 @@
+#!/bin/bash
+
+while true; do
+    read -p "Enter agent name (letters, numbers, hyphens only): " agent_name
+    if [[ "$agent_name" =~ ^[a-zA-Z0-9-]+$ ]] && [[ ${#agent_name} -gt 0 ]]; then
+        break
+    else
+        echo "Invalid name. Use only letters, numbers, and hyphens."
+    fi
+done
+
+mkdir -p ~/.myagents
+
+echo "Enter rules for your agent (press Enter twice when done):"
+rules=""
+while IFS= read -r line; do
+    if [[ -z "$line" ]]; then
+        break
+    fi
+    rules+="$line"$'\n'
+done
+
+cat > ~/.myagents/${agent_name}.md << EOF
+# Global Context
+
+## System Information
+- OS: Linux
+- Current Directory: /home/ec2-user/foxy/aws-scripts/scripts/create-q-cli-agent
+- User Type: Hacker/Developer
+
+## Agent Rules
+${rules}
+EOF
+
+mkdir -p ~/.aws/amazonq/cli-agents
+
+cat > ~/.aws/amazonq/cli-agents/${agent_name}.json << EOF
+{
+  "name": "${agent_name}",
+  "description": "General purpose Q CLI agent with custom global context",
+  "resources": [
+    "file://$HOME/.myagents/${agent_name}.md"
+  ],
+  "allowedTools": ["execute_bash", "fs_read", "fs_write", "use_aws"]
+}
+EOF
+
+echo "Agent '${agent_name}' created with global context."
+echo ""
+echo "Context file written to: ~/.myagents/${agent_name}.md"
+echo ""
+echo "Current rules in the file:"
+echo "========================="
+cat ~/.myagents/${agent_name}.md
+echo "========================="
+echo ""
+echo "To update the agent's context, edit the file: ~/.myagents/${agent_name}.md"
+echo "Add new rules under the 'Agent Rules' section."
+echo ""
+echo "1. Launch a chat session with your custom agent (from terminal, not within q chat):"
+echo "   q chat --agent ${agent_name}"
+echo ""
+echo "2. The context from ~/.myagents/${agent_name}.md will be available to the agent"
+echo ""
+echo "3. Use any Q CLI commands or ask questions - the agent will use your global context"
