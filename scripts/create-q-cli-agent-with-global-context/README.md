@@ -2,7 +2,7 @@
 
 ## What This Script Does
 
-This script creates custom Amazon Q CLI agents with persistent global context. It automates the setup of personalized AI agents that remember your specific rules, preferences, and system information across chat sessions.
+This script creates custom Amazon Q CLI agent with persistent global context. It automates the setup of personalized AI agents that remember your specific rules, preferences, and system information across chat sessions.
 
 ## Why Use This Script
 
