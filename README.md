@@ -9,7 +9,7 @@ You can view a list of the available scripts and descriptions on the Wiki
 https://github.com/2ndSightLab/aws-scripts/wiki/Avaialble-Scripts
 
 _______________
-For the humans: The code in this repository was largely written by Q whith Claude except where it got confused or was taking too long due to looping failures. These are instructions for Amazon Q below. I noticed the README.md file was in context by default when I started q chat in the root of a repository. But it didn't really work. Q didn't really follow the instructions in the readme for a while so I gave up. I have fone ways to use Q effectively but not via the readme. For information on how this code is written and any caveats follow my blog (email or on Medium) at https://medium.com/cloud-security. Please support this blog by abiding by the license. If you want to use the code or context for commercial use drop me a line on LinkedIn.
+For the humans: The code in this repository was largely written by Q with Claude except where it got confused or was taking too long due to looping failures. These are instructions for Amazon Q below. I noticed the README.md file was in context by default when I started q chat in the root of a repository. But it didn't really work. Q didn't really follow the instructions in the readme for a while so I gave up. I have fone ways to use Q effectively but not via the readme. For information on how this code is written and any caveats follow my blog (email or on Medium) at https://medium.com/cloud-security. Please support this blog by abiding by the license. If you want to use the code or context for commercial use drop me a line on LinkedIn.
 ______________
 
 
