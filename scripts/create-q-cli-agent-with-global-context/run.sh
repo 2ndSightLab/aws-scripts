@@ -36,12 +36,40 @@ mkdir -p ~/.aws/amazonq/cli-agents
 
 cat > ~/.aws/amazonq/cli-agents/${agent_name}.json << EOF
 {
+  "\$schema": "https://raw.githubusercontent.com/aws/amazon-q-developer-cli/refs/heads/main/schemas/agent-v1.json",
   "name": "${agent_name}",
-  "description": "General purpose Q CLI agent with custom global context",
-  "resources": [
-    "file://$HOME/.myagents/${agent_name}.md"
+  "description": "General purpose Q CLI agent with custom global context and default Q CLI context",
+  "prompt": null,
+  "mcpServers": {},
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "use_aws",
+    "gh_issue",
+    "knowledge",
+    "thinking",
+    "todo_list",
+    "@mcp_server_name/mcp_tool_name",
+    "@mcp_server_name_without_tool_specification_to_include_all_tools"
   ],
-  "allowedTools": ["execute_bash", "fs_read", "fs_write", "use_aws"]
+  "toolAliases": {},
+  "allowedTools": [],
+  "resources": [
+    "file://$HOME/.myagents/${agent_name}.md",
+    "file://AmazonQ.md",
+    "file://AGENTS.md",
+    "file://README.md",
+    "file://.amazonq/rules/**/*.md"
+  ],
+  "hooks": {},
+  "toolsSettings": {
+    "execute_bash": {
+      "autoAllowReadonly": true
+    }
+  },
+  "useLegacyMcpJson": true,
+  "model": null
 }
 EOF
 
