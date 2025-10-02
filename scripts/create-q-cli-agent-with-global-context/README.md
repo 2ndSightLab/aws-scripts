@@ -20,17 +20,12 @@ This script creates custom Amazon Q CLI agent with persistent global context. It
 
 ### Running the Script
 
-1. Make the script executable:
-   ```bash
-   chmod +x run.sh
-   ```
-
-2. Run the script:
+1. Run the script:
    ```bash
    ./run.sh
    ```
 
-3. Follow the prompts:
+2. Follow the prompts:
    - Enter an agent name (letters, numbers, hyphens only)
    - Add custom rules for your agent (press Enter twice when finished)
 
