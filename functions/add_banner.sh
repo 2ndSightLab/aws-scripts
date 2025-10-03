@@ -40,7 +40,7 @@ add_banner() {
     fi
     
     # Check if banner already exists and is current (look for "Name:" format)
-    if head -30 "$file" | grep -q "^################################################################$" && head -30 "$file" | grep -q "#  Name:"; then
+    if head -30 "$file" | grep -q "^################################################################$" && head -30 "$file" | grep -q "#  Name:" && head -30 "$file" | grep -q "scripts/"; then
         echo "Current banner already exists in $file, skipping"
         return 0
     fi
@@ -70,13 +70,17 @@ add_banner() {
         local name_line="#  Name: $name"
     fi
     
+    # Get git root and relative path
+    local git_root=$(git -C "$(dirname "$file")" rev-parse --show-toplevel)
+    local relative_path=${file#$git_root/}
+    
     cat > "$temp_file" << EOF
 #!/bin/bash -e
 ################################################################
 #
 $name_line
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: $(basename "$file")
+#  File: $relative_path
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
 #  $description
