@@ -3,10 +3,10 @@
 #
 #  Name: S3 Lifecycle
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: s3-lifecycle.sh
+#  File: scripts/aws-archive-account/scripts/s3-lifecycle.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Manage S3 lifecycle policies
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 
 cat <<'END_TEXT'

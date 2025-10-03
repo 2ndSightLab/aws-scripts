@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Launch Instance
+#  Name: Launch_instance
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: launch_instance.sh
+#  File: scripts/aws-archive-account/functions/launch_instance.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Launch EC2 instance
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 launch_instance(){
   local ami_id="$1"

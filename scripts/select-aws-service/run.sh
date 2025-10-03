@@ -2,7 +2,10 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../../functions/list_aws_services.sh"
-source "$SCRIPT_DIR/../select-aws-cli-profile/run.sh"
+
+if [[ -z "$PROFILE" ]]; then
+    source "$SCRIPT_DIR/../select-aws-cli-profile/run.sh"
+fi
 
 if [[ -z "$SOURCE" ]]; then
     while true; do

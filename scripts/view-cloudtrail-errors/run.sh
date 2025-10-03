@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: View CloudTrail Errors
+#  Name: Run
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: view-cloudtrail-errors.sh
+#  File: scripts/view-cloudtrail-errors/run.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  View and analyze CloudTrail error events
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 
 echo "AWS CLI profiles:"

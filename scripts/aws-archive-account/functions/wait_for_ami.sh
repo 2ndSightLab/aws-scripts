@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Wait For AMI
+#  Name: Wait_for_ami
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: wait_for_ami.sh
+#  File: scripts/aws-archive-account/functions/wait_for_ami.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Wait for AMI to become available
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 wait_for_ami(){
   local AMI_ID="$1"  

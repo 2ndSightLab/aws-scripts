@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Share AMI
+#  Name: Share_ami
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: share_ami.sh
+#  File: scripts/aws-archive-account/functions/share_ami.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Share AMI with another account
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 share_ami(){
   local AMI_ID="$1"

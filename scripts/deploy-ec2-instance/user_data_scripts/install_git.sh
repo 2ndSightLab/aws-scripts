@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Install Git
+#  Name: Install_git
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: install_git.sh
+#  File: scripts/deploy-ec2-instance/user_data_scripts/install_git.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Install Git version control system
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,5 +19,6 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 sudo yum install git -y

@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Clone Git Repository
+#  Name: Clone_git_repo
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: clone_git_repo.sh
+#  File: scripts/deploy-ec2-instance/user_data_scripts/clone_git_repo.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Clone a git repository with optional authentication
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 # Check if git is installed, install if not
 if ! command -v git &> /dev/null; then

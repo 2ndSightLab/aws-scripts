@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: AWS Service Role with MFA
+#  Name: Aws Service Role With Mfa
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: aws-service-role-with-mfa.sh
+#  File: scripts/aws-service-role-with-mfa/aws-service-role-with-mfa.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Create AWS service role with MFA requirements
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 
 

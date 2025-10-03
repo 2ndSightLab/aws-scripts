@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Configure Vim Colors
+#  Name: Colors_vim
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: colors_vim.sh
+#  File: scripts/deploy-ec2-instance/user_data_scripts/colors_vim.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Configure Vim with custom color scheme
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 sudo -u ec2-user bash << 'EOF'
 THIS_DIR=$(pwd)

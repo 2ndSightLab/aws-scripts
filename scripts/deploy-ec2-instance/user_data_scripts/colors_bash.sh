@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Configure Bash Colors
+#  Name: Colors_bash
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: colors_bash.sh
+#  File: scripts/deploy-ec2-instance/user_data_scripts/colors_bash.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Configure Bash terminal colors and prompt
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 sudo -u ec2-user bash << 'EOF'
 

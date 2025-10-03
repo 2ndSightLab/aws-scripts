@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Install OpenSSL
+#  Name: Install_ssl
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: install_ssl.sh
+#  File: scripts/deploy-ec2-instance/user_data_scripts/install_ssl.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Install OpenSSL development packages on EC2 instance
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 # Install OpenSSL development packages
 sudo yum install openssl-devel -y

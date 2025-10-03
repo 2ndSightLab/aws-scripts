@@ -1,12 +1,12 @@
-#/bin/bash -e
+#!/bin/bash -e
 ################################################################
 #
-#  Name: AWS Archive Account
+#  Name: Run
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: run.sh
+#  File: scripts/aws-archive-account/run.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Copy resources from an account to an archive account
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 #these variables contain the AWS CLI profiles used in the to and from AWS account
 ARCHIVE_TO=""

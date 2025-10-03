@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Create User Secrets
+#  Name: Run
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: run.sh
+#  File: scripts/create-user-secrets/run.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Create AWS Secrets Manager secrets for AWS CLI and GitHub
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 # Variables
 ENVIRONMENT=""

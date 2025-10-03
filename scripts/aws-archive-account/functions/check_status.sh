@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Check Status
+#  Name: Check_status
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: check_status.sh
+#  File: scripts/aws-archive-account/functions/check_status.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Check EC2 instance status
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,8 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
+
 
 check_status(){
     local instance_id="$1"

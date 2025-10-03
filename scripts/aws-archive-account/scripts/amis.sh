@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Archive AMIs
+#  Name: Amis
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: amis.sh
+#  File: scripts/aws-archive-account/scripts/amis.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Archive AMI resources
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 # Source functions
 source functions/create_local_ami.sh

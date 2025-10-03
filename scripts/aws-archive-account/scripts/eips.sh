@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Archive EIPs
+#  Name: Eips
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: eips.sh
+#  File: scripts/aws-archive-account/scripts/eips.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Archive Elastic IP addresses
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 
 cat <<'END_TEXT'

@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Update System
+#  Name: Update
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: update.sh
+#  File: scripts/deploy-ec2-instance/user_data_scripts/update.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Update system packages on EC2 instance
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 
 

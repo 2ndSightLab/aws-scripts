@@ -1,12 +1,12 @@
 #!/bin/bash -e
 ################################################################
 #
-#  Name: Archive IAM Policies
+#  Name: Iam Policies
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
-#  File: iam-policies.sh
+#  File: scripts/aws-archive-account/scripts/iam-policies.sh
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
-#  Archive IAM policies
+#  AWS automation script
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,6 +19,7 @@
 #  AI are governed by the terms of this license as part of the overall work.
 # 
 ################################################################
+
 
 
 
