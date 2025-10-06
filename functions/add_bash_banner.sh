@@ -20,16 +20,17 @@
 # 
 ################################################################
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 add_banner() {
     local file="$1"
     local name="$2"
     local description="$3"
-    local is_function="$4"
     
     # Check arguments
-    if [ -z "$file" ] || [ -z "$name" ] || [ -z "$description" ] || [ -z "$is_function" ]; then
+    if [ -z "$file" ] || [ -z "$name" ] || [ -z "$description" ]; then
         echo "Error: Missing required arguments"
-        echo "Usage: add_banner <file> <name> <description> <is_function>"
+        echo "Usage: add_banner <file> <name> <description>"
         return 1
     fi
     
@@ -64,15 +65,15 @@ add_banner() {
     # Create temp file with banner
     local temp_file="/tmp/banner_$(basename "$file")"
     
-    if [ "$is_function" = "true" ]; then
-        local name_line="#  Name: $name"
-    else
-        local name_line="#  Name: $name"
-    fi
+    local name_line="#  Name: $name"
     
     # Get git root and relative path
     local git_root=$(git -C "$(dirname "$file")" rev-parse --show-toplevel)
-    local relative_path=${file#$git_root/}
+    local absolute_file=$(realpath "$file")
+    local relative_path=${absolute_file#$git_root/}
+    
+    # Get current year
+    local current_year=$(date +%Y)
     
     cat > "$temp_file" << EOF
 #!/bin/bash -e
@@ -81,7 +82,7 @@ add_banner() {
 $name_line
 #  GitHub repository: https://github.com/2ndSightLab/aws-scripts
 #  File: $relative_path
-#  Copyright: © 2025 2nd Sight Lab, LLC
+#  Copyright: © $current_year 2nd Sight Lab, LLC
 # 
 #  $description
 # 
