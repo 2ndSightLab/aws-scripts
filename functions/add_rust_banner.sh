@@ -94,7 +94,6 @@ $name_line
 //  AI are governed by the terms of this license as part of the overall work.
 //
 ////////////////////////////////////////////////////////////////
-
 EOF
     
     # Add existing content
