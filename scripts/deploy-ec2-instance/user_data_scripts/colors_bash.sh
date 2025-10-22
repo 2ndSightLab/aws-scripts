@@ -42,7 +42,7 @@ echo '#should work in bash' >> ~/.bashrc
 echo '#you can change to bash with this command:' >> ~/.bashrc
 echo '#chsh -s /bin/bash' >> ~/.bashrc
 echo '#Mac uses zsh due to licensing issues and it has some different features' >> ~/.bashrc
-echo 'echo -e "\e]11;#000000\a"' >> ~/.bashrc
+echo 'echo -e "\e]11;#021621\a"' >> ~/.bashrc
 echo ''  >> ~/.bashrc
 echo '#PS1'  >> ~/.bashrc
 echo '#The first item is the prompt' >> ~/.bashrc
