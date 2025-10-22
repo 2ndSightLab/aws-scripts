@@ -20,6 +20,13 @@
 # 
 ################################################################
 
+EC2_USER="ec2-user"
+VIMRC_FILE="/home/$EC2_USER/.vimrc"
+
+if sudo [ -f "$VIMRC_FILE" ]; then
+  echo "The .vimrc file for $EC2_USER already exists. Exiting script."
+  exit 0
+fi
 
 sudo -u ec2-user bash << 'EOF'
 THIS_DIR=$(pwd)
