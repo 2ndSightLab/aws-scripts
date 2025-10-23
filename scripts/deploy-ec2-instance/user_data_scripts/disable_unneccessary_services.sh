@@ -11,3 +11,7 @@ sudo systemctl disable gssproxy
 #superceded by cron -why running on Amazon Linux by default?
 sudo systemctl stop atd
 sudo systemctl disable atd
+
+#nfs
+sudo systemctl disable nfs-client.target
+sudo systemctl mask nfs-client.target
