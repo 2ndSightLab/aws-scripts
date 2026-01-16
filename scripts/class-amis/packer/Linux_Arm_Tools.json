@@ -1,0 +1,72 @@
+{
+    "variables" : 
+    {
+    	"ami-builder-region" : "",
+			"name" : "",
+    	"ami-name" : "",
+			"ami-description" : "",
+    	"ami-builder-vpc-id" : "",
+    	"ami-builder-subnet-id" : "",
+    	"ami-type" : "",
+    	"kms-key-id" : "",
+    	"ami" : "",
+    	"volume-size" : "16",
+    	"instance-type" : "",
+    	"processor" : ""
+    },
+    "builders" : 
+	  [{
+    	"name" : "{{ user `name` }}",
+			"profile" : "default",
+     	"type" : "amazon-ebs",
+      "iam_instance_profile": "2sl-packer-instance-role",
+    	"ami_name" : "{{user `ami-name` }}",
+     	"ami_description" : "{{user `ami-description` }}",
+     	"region" : "{{ user `ami-builder-region` }}",
+    	"source_ami" : "{{ user `ami` }}",
+     	"instance_type" : "{{ user `instance-type` }}",
+     	"tags" : {
+      	"Name" : "{{ user `ami-name` }}"
+    	},
+      "run_tags" : {
+         "Name" : "{{ user `ami-name` }}"
+    	},
+     	"run_volume_tags" : {
+      		"Name" : "{{ user `ami-name` }}"
+   		},
+    	"snapshot_tags" : {
+      	"Name" : "{{ user `ami-name` }}"
+    	},
+	    "ssh_username" : "ec2-user",
+    	"associate_public_ip_address" : true,
+    	"vpc_id" : "{{ user `ami-builder-vpc-id` }}",
+     	"subnet_id" : "{{ user `ami-builder-subnet-id` }}",
+			"launch_block_device_mappings": 
+			[{
+      		"device_name": "/dev/xvda",
+       		"encrypted": "true",
+					"kms_key_id": "{{ user `kms-key-id` }}",
+					"volume_size": "{{ user `volume-size` }}",
+       		"delete_on_termination": true
+   		}]
+		}],
+  	"provisioners" : 
+		[
+			{
+				"type": "shell",
+				"execute_command": "chmod +x {{ .Path }}; . '{{ .Path }}' {{ user `processor` }}",
+				"scripts": [
+						"scripts/linux-arm/tools/mkdirs.sh",
+						"scripts/linux-arm/tools/s3-sync.sh",
+          	"scripts/linux-arm/tools/gh.sh",
+          	"scripts/linux-arm/tools/tools.sh",
+          	"scripts/linux-arm/tools/packer-arm.sh",
+          	"scripts/linux-arm/tools/terraform.sh",
+          	"scripts/linux-arm/tools/docker.sh",
+          	"scripts/linux-arm/cleanup.sh"
+
+				]
+		}
+	]
+}
+

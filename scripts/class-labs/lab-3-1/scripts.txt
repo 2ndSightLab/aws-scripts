@@ -1,0 +1,44 @@
+#AWS
+packer --version
+
+cd ~/[Your Class Repo]/lab-3-1/ami
+
+ls
+
+cat ami.json
+
+cat packer.sh
+
+chmod 700 packer.sh
+
+./packer.sh
+
+#AZURE
+
+cd /home/ec2-user/[Your Class Repo]/lab-3-1/azure_vm
+
+ls
+
+az login
+
+az ad sp create-for-rbac -n "Packer"
+
+
+#save these values
+# appId
+# Password
+#Tenant
+# Subscription ID
+
+az ad sp credential reset --name "Packer"
+
+az account show --query id
+
+az group create --location uswest2 --name 2SL3000
+
+chmod 700 packer.sh
+
+sh packer.sh
+
+
+

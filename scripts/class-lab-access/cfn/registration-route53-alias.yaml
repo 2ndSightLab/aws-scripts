@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Cognito alias after setting custom domain Name
+
+#alias to point domain to congnito and SSL Cert
+#for cloudfront hosted domain id is: Z2FDTNDATAQYW2
+#according to this page:
+#https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html#cfn-route53-aliastarget-dnshostname
+
+#https://dev-auth-2ndsightlab.auth.us-west-2.amazoncognito.com
+
+#hosted zone IDs for S3. Goog to know.
+#https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+Parameters:
+  ClassCode:
+    Description: Class Code 
+    Type: String
+  CognitoCloudFrontDomain: 
+    Description: cognito alias from cognito domain settings - after you set custom domain.
+    Type: String
+  COGNITOMAGICHOSTEDZONEID:
+    Description: Putting this here so I don't forget again. Kind of annoying.
+    Type: String
+    AllowedValues: 
+      - Z2FDTNDATAQYW2
+    Default: Z2FDTNDATAQYW2
+  ContentCloudFrontDomain: 
+    Description: cognito alias from cognito domain settings - after you set custom domain.
+    Type: String
+Resources:
+  
+  #this alias is for congnito domain auth a record
+  AuthDomainAlias:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId:
+        Fn::ImportValue:
+          !Sub ${ClassCode}-Auth-DomainId
+
+      RecordSets:
+      - Name: 
+          Fn::ImportValue: 
+            !Sub "${ClassCode}-AuthDomain"
+        Type: A
+        AliasTarget:
+          #magic cloudfront domain id Z2FDTNDATAQYW2
+          HostedZoneId: !Ref COGNITOMAGICHOSTEDZONEID
+          DNSName:
+            !Ref CognitoCloudFrontDomain
+
+  #this a record is to point the content domain to the cloudfront distribution
+  ContentDomainAlias:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId:
+        Fn::ImportValue:
+          !Sub ${ClassCode}-Content-DomainId
+      RecordSets:
+      - Name: 
+          Fn::ImportValue: 
+            !Sub "${ClassCode}-ContentDomain"
+        Type: A
+        AliasTarget:
+          #magic cloudfront domain id Z2FDTNDATAQYW2
+          HostedZoneId: !Ref COGNITOMAGICHOSTEDZONEID
+          DNSName:
+            !Ref ContentCloudFrontDomain

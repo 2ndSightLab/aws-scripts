@@ -1,0 +1,423 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free,
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed,
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way,
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+#Add an export to the eks-vpc-subnets-nat.yaml file called EKS-PublicNACL
+#Then create a command line to run this script and add the NACLs
+#Troubleshoot any issues
+AWSTemplateFormatVersion: 2010-09-09
+Description: 2SL3000 EKS public NACLs
+
+Resources:
+#block any /8 IP Ranges with a Digital Ocean CIDR Range in it
+#note this will block more than Digital Ocean, but there are not
+#enough NACL rules to block them all. Depending what you are
+#trying to do this will break things, but we will never
+#have a class on a Digital Ocean network if at all possible!
+
+#INBOUND
+
+  #104.131.0.0/16
+  #104.236.0.0/16
+  #104.248.0.0/16
+  PublicNACLEntry104Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "104"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "104.0.0.0/8"
+
+  #107.170.0.0/16
+  PublicNACLEntry107Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "107"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "107.0.0.0/8"
+
+  #134.122.0.0/17
+  #134.209.0.0/16
+  PublicNACLEntry134Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "134"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "134.0.0.0/8"
+
+  #137.184.0.0/16
+  PublicNACLEntry137Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "137"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "137.0.0.0/8"
+
+  #138.197.0.0/16
+  #138.68.0.0/16
+  PublicNACLEntry138Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "138"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "138.0.0.0/8"
+
+  #142.93.0.0/16
+  PublicNACLEntry142Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "142"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "142.0.0.0/8"
+
+  #157.230.0.0/16
+  #157.245.0.0/16
+  PublicNACLEntry157Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "157"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "157.0.0.0/8"
+
+  #159.203.0.0/16
+  #159.65.0.0/16
+  #159.89.0.0/16
+  PublicNACLEntry159Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "159"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "159.0.0.0/8"
+
+  #161.35.0.0/16
+  PublicNACLEntry161Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "161"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "161.0.0.0/8"
+
+  #162.243.0.0/16
+  PublicNACLEntry162Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "162"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "162.0.0.0/8"
+
+  #164.90.128.0/17
+  PublicNACLEntry164Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "164"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "164.0.0.0/8"
+
+  #165.22.0.0/16
+  #165.227.0.0/16
+  PublicNACLEntry165Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "165"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "165.0.0.0/8"
+
+  #167.71.0.0/16
+  #167.99.0.0/16
+  PublicNACLEntry167Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "167"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "167.0.0.0/8"
+
+  #174.138.0.0/17
+  PublicNACLEntry174Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "174"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "174.0.0.0/8"
+
+  #192.241.128.0/17
+  #192.34.56.0/21
+  #192.81.208.0/20
+  PublicNACLEntry192Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "192"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "192.0.0.0/8"
+
+  #198.199.64.0/18
+  #198.211.96.0/19
+  #198.232.147.0/24
+  PublicNACLEntry198Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "198"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "198.0.0.0/8"
+
+  #199.4.223.0/24
+  PublicNACLEntry199Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "199"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "false"
+      CidrBlock: "199.0.0.0/8"
+
+#OUTBOUND
+
+  #204.48.16.0/20
+  PublicNACLEntry204Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "204"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "204.0.0.0/8"
+
+  #206.189.0.0/16
+  #206.81.0.0/19
+  PublicNACLEntry206Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "206"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "206.0.0.0/8"
+
+  #207.154.192.0/18
+  PublicNACLEntry207Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "207"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "207.0.0.0/8"
+
+  #208.68.36.0/22
+  PublicNACLEntry208Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "208"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "208.0.0.0/8"
+
+  #209.97.128.0/18
+  PublicNACLEntry209Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "209"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "209.0.0.0/8"
+
+  #45.55.0.0/16
+  PublicNACLEntry45Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "45"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "45.0.0.0/8"
+
+  #64.225.0.0/17
+  #64.227.0.0/17
+  PublicNACLEntry64Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "64"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "64.0.0.0/8"
+
+  #67.205.128.0/18
+  #67.207.64.0/19
+  PublicNACLEntry67Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "67"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "67.0.0.0/8"
+
+  #68.183.0.0/16
+  PublicNACLEntry68Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "68"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "68.0.0.0/8"
+
+#OTHER PROBLEMATIC IP RANGES
+
+  PublicNACLEntry511Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "51"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "51.0.0.0/8"
+
+  PublicNACLEntry61Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "61"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "61.0.0.0/8"
+
+  #Russian Federation
+  PublicNACLEntry77Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "77"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "77.0.0.0/8"
+
+  #Ripe/Russian IP ranges
+  PublicNACLEntry185Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "185"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: ".0.0/8"
+
+  PublicNACLEntry92Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "92"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "92.0.0.0/8"
+
+  PublicNACLEntry146Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "146"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "146.0.0.0/8"
+
+  PublicNACLEntry80Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "80"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "80.0.0.0/8"
+
+  PublicNACLEntry88Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !ImportValue EKS-PublicNacl
+      RuleNumber: "88"
+      Protocol: "-1"
+      RuleAction: Deny
+      Egress: "true"
+      CidrBlock: "88.0.0.0/8"

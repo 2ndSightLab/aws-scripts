@@ -1,0 +1,45 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: 2SL Class - Certificate Validation
+
+Parameters: 
+
+  CName: 
+    Description: CNAME for cert validation
+    Type: String
+   
+  CNameValue: 
+    Description: CNAME value for content cert validation - 0332 for dev and 4891 for prod.
+    Type: String
+  
+  ParamClassCode:
+    Description: Creating the content or the auth domain?
+    Type: String
+
+  ParamContentOrAuth:
+    Description: Creating the content or the auth domain?
+    Type: String
+    AllowedValues: 
+      - Content
+      - Auth
+      
+Resources:
+
+  CertValRecordsetAuth:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: 
+        Fn::Join:
+          - ""
+          - - Fn::ImportValue: !Sub "${ParamClassCode}-${ParamContentOrAuth}Domain"
+            - "."
+      RecordSets:
+      - Name: !Ref CName
+        Type: CNAME
+        TTL: '900'
+        Weight: '10'
+        SetIdentifier: CertValidation
+        ResourceRecords:
+        - !Ref CNameValue
+
+ 

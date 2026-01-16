@@ -1,0 +1,5 @@
+"ami-description": "Base Windows AMI on which all the other 2nd Sight Lab Amis are built.",
+"volume-size": "60",
+"instance-type": "t3.medium",
+"template": "Windows_Base.json",
+"ssm_param_base_ami": "ami.windows.base.baseami"

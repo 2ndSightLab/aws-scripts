@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+ ClassCode: 
+    Description: Unique class code
+    Type: String
+
+Resources:
+
+  CFOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: 'OriginAccessIdentity2slContent'
+
+  CFDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: 'true'
+        HttpVersion: http2
+        DefaultRootObject: index.html
+        Logging:
+          Bucket: 
+            Fn::ImportValue: 
+              !Sub "LogBucketDomain-${ClassCode}"
+        Aliases:
+          - Fn::ImportValue: 
+              !Sub "${ClassCode}-ContentDomain"
+        ViewerCertificate:
+          AcmCertificateArn: 
+            Fn::ImportValue:
+              !Sub "ContentCert-${ClassCode}"
+          MinimumProtocolVersion: TLSv1.2_2018
+          SslSupportMethod: sni-only
+
+        Origins:
+          -
+            Id: ContentOrigin
+            DomainName: 
+              Fn::ImportValue: 
+                !Sub PublicBucketDomain-${ClassCode}
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CFOriginAccessIdentity}
+
+        DefaultCacheBehavior:
+          TargetOriginId: ContentOrigin
+          ForwardedValues:
+            QueryString: 'true'
+            QueryStringCacheKeys:
+              - 'none'
+          ViewerProtocolPolicy: redirect-to-https
+          DefaultTTL: 0
+          MinTTL: 0
+          MaxTTL: 0
+
+        Aliases:
+          - Fn::ImportValue: 
+              !Sub "${ClassCode}-ContentDomain"
+          
+  PublicBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: 
+        Fn::ImportValue:
+          !Sub "PublicBucket-${ClassCode}"
+      PolicyDocument:
+        Statement:
+          -
+            Effect: Allow
+            Action: s3:GetObject
+            Principal:
+              CanonicalUser: !GetAtt CFOriginAccessIdentity.S3CanonicalUserId
+            Resource: 
+              Fn::ImportValue: 
+                !Sub "PublicBucketArn-${ClassCode}"
+
+Outputs:
+  CloudFrontDistribution:
+    Value: !Sub 'https://console.aws.amazon.com/cloudfront/home?region=${AWS::Region}#distribution-settings:${CFDistribution}'
+  CloudFrontUrl:
+    Value: !Sub 'https://${CFDistribution.DomainName}/index.html'
+  CloudFrontContentDomain:
+    Value: !GetAtt CFDistribution.DomainName
+    Export:
+      Name: !Sub "CloudFrontContentDomain-${ClassCode}"

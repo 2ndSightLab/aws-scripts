@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Base S3 Bucket"
+
+Parameters:
+  bucketname:
+    Type: String
+  
+Resources:
+  BaseS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref bucketname
+
+Outputs:
+  bucketname:
+    Value: !Ref BaseS3Bucket
+    Export:
+      Name: "lab-3-3-bucket-name"

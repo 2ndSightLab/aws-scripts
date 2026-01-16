@@ -1,0 +1,391 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free,
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed,
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way,
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+#Note - the private subnets and NAT are in here to show how you could
+#put the nodes in a private subnet but not used for the initial use case.
+AWSTemplateFormatVersion: 2010-09-09
+Description: 2SL3000 EKS VCP Subnets NAT
+
+Parameters:
+
+  VPCName:
+    Description: The name of this VPC. All resources will be tagged with this name.
+    Type: String
+    Default: 2SL3000-VPC-EKS
+
+  VPCCidr:
+    Description: |
+      VPC CIDR Block. Please make sure to make this CIDR large enough to support
+      multiple subnets. The allowed sizes are from a /16 to a /28. We will be
+      deploying 7 subnets, so plan accordingly.
+    Type: String
+    Default: 10.0.0.0/16
+
+Resources:
+
+  # ------------------------------------------------
+  # VPC
+  # ------------------------------------------------
+  BaseVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      CidrBlock: !Ref VPCCidr
+      Tags:
+        - Key: Name
+          Value: EKS-VPC
+
+  # ------------------------------------------------
+  # DHCP Options
+  # ------------------------------------------------
+  BaseVPCDHCPOptions:
+    Type: AWS::EC2::DHCPOptions
+    Properties:
+      DomainNameServers:
+      - AmazonProvidedDNS
+      NtpServers:
+      - 169.254.169.123
+
+  BaseVPCDHCPOptionsAssociation:
+    Type: AWS::EC2::VPCDHCPOptionsAssociation
+    Properties:
+      DhcpOptionsId: !Ref BaseVPCDHCPOptions
+      VpcId: !Ref BaseVPC
+
+  # ------------------------------------------------
+  # VPC FlowLogs
+  # ------------------------------------------------
+  BaseVPCFlowLogs:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      ResourceId: !Ref BaseVPC
+      DeliverLogsPermissionArn: !ImportValue EKSFlowLogsRole
+      LogGroupName: EKS-FlowLogsGroup
+      ResourceType: VPC
+      TrafficType: ALL
+
+  # ------------------------------------------------
+  # Internet Gatway
+  # ------------------------------------------------
+  BaseVPCInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  BaseVPCInternetGatewayAttachement:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref BaseVPC
+      InternetGatewayId: !Ref BaseVPCInternetGateway
+
+  # ------------------------------------------------
+  # EIP
+  # ------------------------------------------------
+  BaseVPCNatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  # ------------------------------------------------
+  # NAT Gateway
+  # ------------------------------------------------
+  BaseVPCNatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt BaseVPCNatGatewayEIP.AllocationId
+      SubnetId: !Ref NATSubnet
+
+  # ------------------------------------------------
+  # Nat Gateway Subnet
+  # ------------------------------------------------
+  NATSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        !Select
+          - 0
+          - !GetAZs
+            Ref: 'AWS::Region'
+      VpcId: !Ref BaseVPC
+      CidrBlock: !Select [ 0, !Cidr [ !GetAtt BaseVPC.CidrBlock, 16, 8 ] ]
+      Tags:
+        - Key: Name
+          Value: EKS-NAT-SUBNET
+        - Key: kubernetes.io/cluster/2SL3000
+          Value: shared
+
+  # ------------------------------------------------
+  # Public Subnets
+  # ------------------------------------------------
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        !Select
+          - 0
+          - !GetAZs
+            Ref: 'AWS::Region'
+      VpcId: !Ref BaseVPC
+      CidrBlock: !Select [ 1, !Cidr [ !GetAtt BaseVPC.CidrBlock, 16, 8 ] ]
+      Tags:
+        - Key: Name
+          Value: EKS-PUBLIC-SUBNET-1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        !Select
+          - 1
+          - !GetAZs
+            Ref: 'AWS::Region'
+      VpcId: !Ref BaseVPC
+      CidrBlock: !Select [ 2, !Cidr [ !GetAtt BaseVPC.CidrBlock, 16, 8 ] ]
+      Tags:
+        - Key: Name
+          Value: EKS-PUBLIC-SUBNET-2
+        - Key: kubernetes.io/cluster/2SL3000
+          Value: shared
+
+  # ------------------------------------------------
+  # Public Subnet Route Table
+  # ------------------------------------------------
+  BaseVPCPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref BaseVPC
+
+  BaseVPCPublicDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref BaseVPCPublicRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref BaseVPCInternetGateway
+
+  BaseVPCPublicRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref NATSubnet
+      RouteTableId: !Ref BaseVPCPublicRouteTable
+
+  BaseVPCPublicRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref BaseVPCPublicRouteTable
+
+  BaseVPCPublicRouteTableAssociation3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref BaseVPCPublicRouteTable
+
+  # ------------------------------------------------
+  # Node/Node Subnets
+  # About the tags:
+  # https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateNodegroup.html
+  # ------------------------------------------------
+  PrivateNodeSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        !Select
+          - 0
+          - !GetAZs
+            Ref: 'AWS::Region'
+      VpcId: !Ref BaseVPC
+      CidrBlock: !Select [ 3, !Cidr [ !GetAtt BaseVPC.CidrBlock, 16, 8 ] ]
+      Tags:
+        - Key: Name
+          Value: EKS-PRIVATE-NODE-SUBNET-1
+        - Key: kubernetes.io/cluster/2SL3000
+          Value: shared
+
+  PrivateNodeSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        !Select
+          - 1
+          - !GetAZs
+            Ref: 'AWS::Region'
+      VpcId: !Ref BaseVPC
+      CidrBlock: !Select [ 4, !Cidr [ !GetAtt BaseVPC.CidrBlock, 16, 8 ] ]
+      Tags:
+        - Key: Name
+          Value: EKS-PRIVATE-NODE-SUBNET-2
+        - Key: kubernetes.io/cluster/2SL3000
+          Value: shared
+
+  # ------------------------------------------------
+  # Private route table with NAT Gateway Route
+  # ------------------------------------------------
+  BaseVPCPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref BaseVPC
+
+  BaseVPCPrivate1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateNodeSubnet1
+      RouteTableId: !Ref BaseVPCPrivateRouteTable
+
+  BaseVPCPrivate2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateNodeSubnet2
+      RouteTableId: !Ref BaseVPCPrivateRouteTable
+
+  BaseVPCPrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref BaseVPCPrivateRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref BaseVPCNatGateway
+
+  # ------------------------------------------------
+  # Public NACL (allow all in/out)
+  # ------------------------------------------------
+  PublicNACL:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref BaseVPC
+      Tags:
+        - Key: Name
+          Value: EKS-PUBLIC-NACL
+
+  PublicNACLAssociation1:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      NetworkAclId: !Ref PublicNACL
+
+  PublicNACLAssociation2:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      NetworkAclId: !Ref PublicNACL
+
+  #Really the NAT only allows outbound Traffic
+  #Fix this in a production environment but using this for brevity
+  NATNACLAssociation1:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref NATSubnet
+      NetworkAclId: !Ref PublicNACL
+
+  #INBOUND
+  #allow everything else
+  PublicNACLEntry0Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref PublicNACL
+      RuleNumber: "999"
+      Protocol: "-1"
+      RuleAction: Allow
+      Egress: "false"
+      CidrBlock: "0.0.0.0/0"
+
+  #OUTBOUND
+  #allow everything else
+  PublicNACLEntry0Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref PublicNACL
+      RuleNumber: "998"
+      Protocol: "-1"
+      RuleAction: Allow
+      Egress: "true"
+      CidrBlock: "0.0.0.0/0"
+
+# ------------------------------------------------
+# Node NACL
+# ------------------------------------------------
+  NodeNACL:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref BaseVPC
+      Tags:
+        - Key: Name
+          Value: EKS-PRIVATE-NACL
+
+  NodeNACLAssociation1:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref PrivateNodeSubnet1
+      NetworkAclId: !Ref NodeNACL
+
+  NodeNACLAssociation2:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref PrivateNodeSubnet2
+      NetworkAclId: !Ref NodeNACL
+
+  NodeNACLEntry0Inbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NodeNACL
+      RuleNumber: "100"
+      Protocol: "-1"
+      RuleAction: Allow
+      Egress: "false"
+      CidrBlock: 0.0.0.0/0
+
+  NodeNACLEntry0Outbound:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NodeNACL
+      RuleNumber: "201"
+      Protocol: "-1"
+      RuleAction: Allow
+      Egress: "true"
+      CidrBlock: 0.0.0.0/0
+
+Outputs:
+  BaseVPCId:
+    Description: The Base VPC ID
+    Value: !Ref BaseVPC
+    Export:
+      Name: "VPCID-EKS"
+
+  PublicSubnet1Id:
+    Description: Public Control Subnet ID 1
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: "PublicSubnetID-1-EKS"
+
+  PublicSubnet2Id:
+    Description: Public Control Subnet ID 2
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: "PublicSubnetID-2-EKS"
+
+  BaseVPCPrivate1SubnetId:
+    Description: Private Node Subnet ID 1
+    Value: !Ref PrivateNodeSubnet1
+    Export:
+      Name: "PrivateSubnetID-1-EKS"
+
+  BaseVPCPrivate2SubnetId:
+    Description: Private Node Subnet ID 2
+    Value: !Ref PrivateNodeSubnet2
+    Export:
+      Name: "PrivateSubnetID-2-EKS"

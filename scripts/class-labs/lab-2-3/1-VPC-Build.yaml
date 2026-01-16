@@ -1,0 +1,176 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws 
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, 
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by 
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials 
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, 
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way, 
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or 
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES 
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: 1-VPC-Build - builds base VPC & IGW. 
+
+Parameters: 
+  VPCName:
+    Description: The name of this VPC. All resources will be tagged with this name.
+    Type: String
+    Default: 2SL-3000-Lab-2-2-VPC
+  VPCCidr:
+    Description: |
+      VPC CIDR Block. Please make sure to make this CIDR large enough to support 
+      multiple subnets. The allowed sizes are from a /16 to a /28. We will be 
+      deploying 7 subnets, so plan accordingly.
+    Type: String
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.0.0/16
+  Username:
+    Description: Your username for taging resources.
+    Type: String
+    Default: username
+
+Resources: 
+  # ------------------------------------------------
+  # Flow Logs Setup
+  #   1. Create IAM service role for vpc-flow-logs
+  #   2. Create & attach IAM policy document to IAM role
+  # ------------------------------------------------
+  FlowLogIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: vpc-flow-logs.amazonaws.com
+          Sid: ""
+        Version: 2012-10-17
+  FlowLogIamPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:DescribeLogGroups
+          - logs:DescribeLogStreams
+          - logs:PutLogEvents
+          Effect: Allow
+          Resource: "*"
+        Version: "2012-10-17"
+      PolicyName: VPC_FLOW_LOGS
+      Roles:
+      - !Ref FlowLogIamRole
+    
+  # ------------------------------------------------
+  # VPC setup
+  #   1. VPC Creation
+  #   2. DHCP Options creation & attachement
+  #   3. Flow Logs setup
+  # ------------------------------------------------
+  BaseVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      CidrBlock: !Ref VPCCidr
+      Tags:
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: Name
+        Value: !Sub ${VPCName}-DNS
+      - Key: Created_By
+        Value: !Sub ${Username}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}-DNS
+  BaseVPCDHCPOptions:
+    Type: AWS::EC2::DHCPOptions
+    Properties:
+      DomainNameServers: 
+      - AmazonProvidedDNS
+      NtpServers:
+      - 169.254.169.123
+      Tags:
+      - Key: Name
+        Value: !Sub ${VPCName}-DNS-DHCPOptions
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}-DNS
+      - Key: Created_By
+        Value: !Sub ${Username}
+  BaseVPCDHCPOptionsAssociation:
+    Type: AWS::EC2::VPCDHCPOptionsAssociation
+    Properties:
+      DhcpOptionsId: !Sub ${BaseVPCDHCPOptions}
+      VpcId: !Sub ${BaseVPC}
+  BaseVPCFlowLogs:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      ResourceId: !Sub ${BaseVPC}
+      DeliverLogsPermissionArn: !GetAtt FlowLogIamRole.Arn
+      LogGroupName: !Sub ${VPCName}-FlowLogsGroup
+      ResourceType: VPC
+      TrafficType: ALL
+
+  # ------------------------------------------------
+  # IGW Creation
+  #   1. Create Internet Gateway & Attach to VPC
+  # ------------------------------------------------
+  BaseVPCInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: !Sub ${VPCName}-DNS-InternetGateway
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}-DNS
+      - Key: Created_By
+        Value: !Sub ${Username}-DNS
+  BaseVPCInternetGatewayAttachement:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Sub ${BaseVPC}
+      InternetGatewayId: !Sub ${BaseVPCInternetGateway}
+
+Outputs:
+  BaseVPCId:
+    Description: The Base VPC ID
+    Value: !Sub ${BaseVPC}
+    Export:
+      Name: "Lab-2-2-VPCID"
+  BaseVPCCidr:
+    Description: VPC Base CIDR
+    Value: !Sub ${VPCCidr}
+    Export:
+      Name: "Lab-2-2-VPCCidr"
+  VPCName:
+    Description: VPC Name
+    Value: !Sub ${VPCName}
+    Export:
+      Name: "Lab-2-2-VPCName"
+  InternetGateway:
+    Description: Internet Gateway
+    Value: !Sub ${BaseVPCInternetGateway}
+    Export:
+      Name: "Lab-2-2-InternetGateway"
+  DNSCidr:
+    Description: Internet Gateway
+    Value: "10.0.0.2/32"
+    Export:
+      Name: "Lab-2-2-DNSCidr"

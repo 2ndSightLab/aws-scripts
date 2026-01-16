@@ -1,0 +1,8 @@
+aws cloudformation create-stack --stack-name lab-2-4-bucket --template-body file://bucket.yaml --parameters ParameterKey=BucketName,ParameterValue="[change-this-to-unique-bucket-name-lower-case]"
+
+aws cloudformation create-stack --stack-name lab-2-4-waf --template-body file://waf.yaml
+
+aws cloudformation create-stack --stack-name lab-2-4-cloudfront --template-body file://cloudfront.yaml
+
+aws s3 cp index.html s3://[YOUR BUCKET NAME] 
+

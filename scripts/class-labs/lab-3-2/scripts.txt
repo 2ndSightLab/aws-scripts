@@ -1,0 +1,155 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free,
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed,
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way,
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+#### Make sure each CloudFormation stack completes before you create the next.####
+
+#EKS IAM Roles
+aws cloudformation create-stack --stack-name EKS-Roles --template-body file://eks-roles.yaml --capabilities CAPABILITY_IAM
+
+#EKS VPC, Subnets, NAT
+aws cloudformation create-stack --stack-name EKS-VPC-Subnets-NAT --template-body file://eks-vpc-subnets-nat.yaml
+
+#EKS Cluster.
+aws cloudformation create-stack --stack-name EKS-Cluster --template-body file://eks-cluster.yaml
+
+#EKS Node Group.
+aws cloudformation create-stack --stack-name EKS-NodeGroup --template-body file://eks-nodegroup.yaml
+
+#If you have issues with your node group EC2 instances joining the cluster,
+#SSH into your EC2 Instances and can check these logs. Some may not exist.
+#Otherwise jump to the next command.
+/var/log/cloud-init-output.log
+/var/log/cloud-init.log
+/var/log/cfn-init.log
+/var/log/cfn-init-cmd.log
+/var/log/cfn-wire.log
+
+#View Kubernetes logs
+sudo journalctl -u kubelet > kubeletlogs
+less kubeletlogs
+
+#Use the AWSCLI update-kubeconfig to create a kubeconfig file for EKS
+#This allows you to connect to your cluster using kubectl
+#https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html
+aws eks --region us-west-2 update-kubeconfig --name 2SL3000
+
+#Test your configuration
+kubectl get svc
+
+#kubctl commands you can try:
+https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
+
+#Apply the changes in the file you edited ...not needed??
+#kubectl apply -f k8s-scripts/ConfigMap.yaml
+
+#Run the following to deploy the application to the nodes.
+kubectl apply -f k8s-scripts/redis-master-deployment.yaml
+kubectl apply -f k8s-scripts/redis-master-service.yaml
+kubectl apply -f k8s-scripts/redis-slave-deployment.yaml
+kubectl apply -f k8s-scripts/redis-slave-service.yaml
+kubectl apply -f k8s-scripts/guestbook-frontend-deployment.yaml
+kubectl apply -f k8s-scripts/guestbook-frontend-service.yaml
+
+#watch the pods to see when they turn from pending to ready
+kubectl get pods --watch
+
+#View your pods as they are created
+kubectl get pods --all-namespaces
+
+#describe your pods to see events, errors, and more info
+kubectl describe pods
+
+-------------
+NOTE:
+Follow the steps in the lab to view the vulnerable cluster. Then use the next script to fix the problem.
+-------------
+kubectl get pods
+
+kubectl logs <pod name> -f
+
+kubectl get pods
+
+kubectl exec -it [one of the frontend pods] sh
+
+cat /etc/passwd
+
+cat /etc/shadow
+
+ls
+
+ls rootpath
+
+cat /rootpath/etc/passwd
+
+cat /rootpath/etc/shadow
+
+exit
+
+kubectl replace -f k8s-scripts/guestbook-frontend-deployment-fix.yaml
+
+TODO: command to access the AWS EC2 credentials here
+
+----------------
+FIX THE PROBLEM:
+----------------
+
+#disable root path mapping
+kubectl replace -f k8s-scripts/guestbook-frontend-service-fix.yaml
+
+kubectl exec -it [one of the frontend pods] sh
+
+cd
+
+ls
+
+exit
+
+#disable access to AWS credentials by containers by running this command
+#on each cluster node i
+yum install -y iptables-services
+iptables --insert FORWARD 1 --in-interface eni+ --destination 169.254.169.254/32 --jump DROP
+iptables-save | tee /etc/sysconfig/iptables
+systemctl enable --now iptables
+
+------------------------------------------------
+CLEANUP SCRIPTS
+-------------------------------------------------
+
+#delete nodes
+aws cloudformation delete-stack \
+    --stack-name EKS-NodeGroup
+
+#delete cluster
+aws cloudformation delete-stack \
+    --stack-name EKS-Cluster
+
+#list the load balancers in your account
+aws elb describe-load-balancers
+
+#the kubernetes elb should be the only one if you are in your own account.
+#delete it by copying the load balancer name into this command:
+aws elb delete-load-balancer --load-balancer-name [your-load-balancer]
+
+#wait for the load balancer to be deleted.
+
+#delete networking
+aws cloudformation delete-stack \
+    --stack-name EKS-Networking

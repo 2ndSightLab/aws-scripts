@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: '2SL-Class-Publisher
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  AmiShareFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ami-share/
+      Handler: ami-share.lambda_handler
+      Runtime: python3.7
+      Timeout: 15
+      Role: arn:aws:iam::974236937774:role/ProdDeploy-PublishLambdaRole
+      # Policies:
+      #   - Statement:
+      #     - Effect: Allow
+      #       Action:
+      #         - "ec2:DescribeImages"
+      #         - "ec2:DescribeImageAttribute"
+      #         - "ec2:ModifyImageAttribute"
+      #       Resource: "*"
+      Events:
+        AmiShare:
+          Type: Api
+          Properties:
+            Path: /ami/share
+            Method: post
+            Auth:
+              ApiKeyRequired: true

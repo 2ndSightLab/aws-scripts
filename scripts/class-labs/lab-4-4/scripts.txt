@@ -1,0 +1,8 @@
+# This lab uses the networking from lab 2.1
+# You will mostly be looking at labs but the lab explains
+# how to set up VMs and generate some traffic
+# using the following command against different IP addresses.
+
+nmap -Pn [Private EC2 Private IP address]
+
+

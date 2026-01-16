@@ -1,0 +1,186 @@
+{
+    "variables" : {
+        "aws_region" : "",
+        "ami" : "",
+	"ami_type" : "",
+	"ami_name": "",
+	"instance_type" : "",
+        "run_user" : "",
+        "vpc_id" : "",
+        "subnet_id" : "",
+	"iam_profile" : "",
+	"passphrase" : "wppassphrase",
+	"database_name" : "wordpress",
+	"wp_user" : "wpadmin",
+	"wp_password" : "s0ccerandtulips",
+	"db_user" : "dbadmin",
+	"db_password" : "s0ccerandtulips",
+	"db_root_password" : "yellowC@rnations",
+	"site_title" : "",
+	"admin_email" : "wp@2ndsightlab.com",
+        "terraform_version" : "0.14.7",
+        "packer_version" : "1.3.3",
+	"theme_s3_path" : "s3://2slpt/fox/fox.zip",
+	"theme_zip" : "fox.zip",
+	"theme" : "fox"
+    },
+    "builders" : [
+        {
+	    "name" : "2nd Sight Lab Wordpress AMI",
+            "type" : "amazon-ebs",
+            "ami_name" : "{{ user `ami_name` }}",
+            "ami_description" : "2nd Sight Lab Wordpress AMI",
+            "region" : "{{ user `region` }}",
+	    "vpc_id" : "{{ user `vpc_id` }}",
+	    "iam_instance_profile" : "{{ user `iam_profile` }}",
+	    "subnet_id" : "{{ user `subnet_id` }}",
+            "source_ami" : "{{ user `ami` }}",
+            "instance_type" : "{{ user `instance_type` }}",
+            "ssh_username" : "ec2-user",
+            "tags" : {
+                "Name" : "{{ user `ami_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}"
+            },
+            "run_tags" : {
+                "Name" : "{{ user `ami_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}",
+                "Run_Time" : "{{ timestamp }}"
+            },
+            "run_volume_tags" : {
+                "Name" : "{{ user `ami_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}",
+                "Run_Time" : "{{ timestamp }}"
+            },
+            "snapshot_tags" : {
+                "Name" : "{{ user `ami_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}",
+                "Run_Time" : "{{ timestamp }}"
+            }
+        }
+    ],
+    "provisioners" : [
+        {
+            "type" : "shell",
+            "inline" : [
+		"#!/usr/bin/env bash",
+		
+		"echo 'install webserver, download and install wordpress'",
+		"sudo yum install -y httpd",
+                
+		"echo 'install aws cli'",
+                "echo python --version",
+                "curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip'",
+                "unzip awscliv2.zip",
+                "sudo ./aws/install",
+		"rm awscliv2.zip",
+		"rm -rf aws",
+		
+		"echo 'remove ntp'",
+                "sudo yum erase 'ntp*'",
+                "echo install chrony",
+                "sudo yum -y install chrony",
+                "sudo rm /etc/chrony.conf",
+                "sudo bash -c \"echo 'server 169.254.169.123 prefer iburst' > /etc/chrony.conf\"",
+                "sudo systemctl enable chronyd.service",
+                "sudo chkconfig chronyd on",
+
+		"echo 'create startup.sh to set the domain to the Amazon IP after boot'",
+		"cd /tmp",
+		"touch startup.sh",
+		"sudo chmod 700 startup.sh",
+		"echo 'IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)' >> startup.sh",
+		"echo 'wp option update home http://\\$IP' --path=/var/www/html' >> startup.sh",
+		"echo 'wp option update siteurl http://\\$IP' --path=/var/www/html' >> startup.sh",		
+		"sudo mv startup.sh /var/lib/cloud/scripts/per-boot/startup.sh",
+		"echo 'install all the rest of the things'",
+                "sudo yum update -y",
+                "sudo yum -y install epel-release yum-utils",
+            
+                "sudo /usr/sbin/update-motd --disable",
+                "printf '\n\nCopyright Notice\nAll Rights Reserved.\nAll course materials (the \"Materials\") are protected by copyright under U.S. Copyright laws and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, perpetual license to the course attendee (the \"Attendee\") to whom they were presented by 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, modified, used to create derivative works, transmitted to others, or used or exploited in any way, including, in whole or in part, as training materials by or for any third party.\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n'| sudo tee /etc/motd",
+                "sudo rm /etc/issue",
+                "sudo ln -s /etc/motd /etc/issue",
+                "sudo yum install -y elinks screen",
+		"sudo yum update -y",
+		"sudo amazon-linux-extras install php8.0 -y",
+		"sudo amazon-linux-extras enable php8.0",
+		"sudo yum install -y mariadb-server",
+	        "sudo systemctl start mariadb",
+		"sudo yum install php-gd -y",
+		"sudo yum list installed | grep php-gd",
+		"sudo systemctl restart httpd",
+		"sudo systemctl enable httpd && sudo systemctl enable mariadb",
+		"sudo systemctl start mariadb",
+		"sudo systemctl status httpd",
+		"sudo systemctl start httpd",
+		"echo 'change db root  passwd'",
+		"mysqladmin -u root password '{{ user `db_root_password` }}'",
+		"mysql -h localhost -u root -p{{ user `db_root_password` }}  -e \"CREATE USER '{{ user `db_user` }}'@'localhost' IDENTIFIED BY '{{ user `db_password` }}'\";",
+		"mysql -h localhost -u root -p{{ user `db_root_password` }} -e \"CREATE DATABASE {{ user `database_name` }};\"",
+		"echo 'grant privileges'",
+		"mysql -h localhost -u root -p{{ user `db_root_password` }} {{ user `database_name` }} -e \"GRANT ALL PRIVILEGES ON {{ user `database_name` }}.* TO '{{ user `db_user` }}'@'localhost';\"",
+		"echo 'flush'",
+		"mysql -h localhost -u root -p{{ user `db_root_password` }} {{ user `database_name` }} -e \"FLUSH PRIVILEGES;\"",
+		"echo 'secure db install'",
+		"sudo mysql_secure_installation << EOF",
+		"{{ user `db_root_password` }}",
+		"N",
+		"Y",
+		"{{ user `db_root_password` }}",
+		"{{ user `db_root_password` }}",
+		"N",
+		"Y",
+		"N",
+		"Y",
+		"EOF",
+		"echo 'delete users with no password'",
+		"mysql -h localhost -u root -p{{ user `db_root_password` }} mysql -e \"delete from mysql.user where password = ''\"",
+		"echo 'install wp command line tools'",
+		"curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar",
+                "chmod +x wp-cli.phar",
+                "sudo mv wp-cli.phar /usr/local/bin/wp",
+		
+		"sudo chown -R ec2-user /var/www",
+                "sudo chgrp -R ec2-user /var/www",
+		"cd /var/www/html",
+		
+		"echo 'download wordpress theme'",
+                "aws s3 cp {{ user `theme_path` }} {{ user `theme_zip` }}",
+                "echo 'validate download'",
+                "echo '-----'",
+                "ls | grep {{ user `theme_zip` }}",
+                "echo '-----'",
+		
+		"echo 'download wp core config'",
+		"wp core download",
+                
+		"echo 'running wp config create'",
+		"wp config create --dbname={{ user `database_name` }} --dbuser={{ user `db_user` }} --dbpass={{ user `db_password` }} --locale=en_US --force",
+		
+		"echo running wp core install",
+		"wp core install --url=\"http://127.0.0.1\" --title=\"{{ user `site_title` }}\" --admin_user=\"{{ user `wp_user` }}\" --admin_password=\"{{ user `wp_password` }}\" --admin_email=\"{{ user `admin_email` }}\"",
+		
+		"#echo 'install wordpress theme {{ user `theme_zip` }}' --activate",
+		"#wp theme install {{ user `theme_zip` }} --activate",
+		"#rm {{ user `theme_zip` }}",
+		
+		"echo 'change permissions on wordpress directories'",
+		"sudo chown -R apache /var/www",
+                "sudo chgrp -R apache /var/www",
+                "sudo chmod 2775 /var/www",
+                "find /var/www -type d -exec sudo chmod 2775 {} \\;",
+                "find /var/www -type f -exec sudo chmod 0664 {} \\;"
+	    ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+              "rm .ssh/authorized_keys ; sudo rm /root/.ssh/authorized_keys"
+            ]
+        }
+    ]
+}

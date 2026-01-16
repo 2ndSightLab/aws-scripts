@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+  ClassCode:
+    Description: Unique class code
+    Type: String
+
+Resources:
+
+  RegistrationLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "index.handler"
+      Role:
+        !Sub arn:aws:iam::${AWS::AccountId}:role/AuthLambda@Edge
+      Code:
+        S3Bucket:
+          !Sub "${ClassCode}-2sl-lambda"
+        S3Key: "auth.zip"
+      Runtime: "nodejs10.x"

@@ -1,0 +1,4 @@
+jwt==1.0.0
+pycparser==2.20
+PyJWT==1.7.1
+six==1.15.0

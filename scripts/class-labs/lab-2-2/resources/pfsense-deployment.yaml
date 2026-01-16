@@ -1,0 +1,233 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws 
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, 
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by 
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials 
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, 
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way, 
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or 
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES 
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "PFSense Cloud Deployment"
+
+Parameters: 
+  VPCName:
+    Description: The name of this VPC. All resources will be tagged with this name.
+    Type: String
+    Default: 2SL-3000-PFSENSE-VPC
+  Username:
+    Description: Your username for taggging resources.
+    Type: String
+  ManagmentIPAddress:
+    Description: Management IP for resources -- your public IP
+    Type: String
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+  PFSenseAmiId:
+    Description: PFSense AMI ID
+    Type: String
+  PFSenseInstanceType:
+    Description: Instance Type
+    Type: String
+  PFSenseKeyName:
+    Description: PFSense Key Name
+    Type: String
+
+Resources:
+  PFSensePublicSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public PFSense Security Group 
+      SecurityGroupEgress: 
+      - CidrIp: 169.254.169.123/32
+        IpProtocol: udp
+        FromPort: 123
+        ToPort: 123
+      - CidrIp: 169.254.169.123/32
+        IpProtocol: tcp
+        FromPort: 123
+        ToPort: 123
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+      SecurityGroupIngress: 
+      - CidrIp: !Sub ${ManagmentIPAddress}
+        IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+      - CidrIp: !Sub ${ManagmentIPAddress}
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 500
+        ToPort: 500
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 4500
+        ToPort: 4500
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: udp
+        FromPort: 500
+        ToPort: 500
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: udp
+        FromPort: 4500
+        ToPort: 4500
+      VpcId: !ImportValue PFSense-VPCID
+      Tags:
+      - Key: Name
+        Value: !Sub ${VPCName}-PublicSG
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}
+      - Key: Created_By
+        Value: !Sub ${Username}
+  PFSensePrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private PFSense Security Group 
+      VpcId: !ImportValue PFSense-VPCID
+      Tags:
+      - Key: Name
+        Value: !Sub ${VPCName}-PrivateSG
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}
+      - Key: Created_By
+        Value: !Sub ${Username}
+  SSHAdminSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SSH Admin Security Group
+      SecurityGroupIngress: 
+      - CidrIp: !Ref ManagmentIPAddress
+        IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+      SecurityGroupEgress: 
+      - CidrIp: 169.254.169.123/32
+        IpProtocol: tcp
+        FromPort: 123
+        ToPort: 123
+      VpcId: !ImportValue PFSense-VPCID
+      Tags:
+      - Key: Name
+        Value: !Sub ${VPCName}-SSHSG
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}
+      - Key: Created_By
+        Value: !Sub ${Username}
+  PublicNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Public Network Interface
+      GroupSet:
+        - !Sub ${PFSensePublicSecurityGroup}
+        - !Sub ${SSHAdminSecurityGroup}
+      SubnetId: !ImportValue PFSense-PublicSubnetID
+      SourceDestCheck: false
+      Tags:
+      - Key: Name
+        Value: !Sub ${VPCName}-Public-ENI
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}
+      - Key: Created_By
+        Value: !Sub ${Username}
+  PFSensePublicElasticIP:
+    Type: AWS::EC2::EIP
+  PFSensePublicElasticIPAssociation:
+    Type: "AWS::EC2::EIPAssociation"
+    Properties:
+      AllocationId: !GetAtt PFSensePublicElasticIP.AllocationId
+      NetworkInterfaceId: !Sub ${PublicNetworkInterface}
+  PrivateNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Private Network Interface
+      GroupSet: 
+        - !Sub ${PFSensePrivateSecurityGroup}
+      SubnetId: !ImportValue PFSense-PrivateSubnetID
+      SourceDestCheck: false
+      Tags:
+      - Key: Name
+        Value: !Sub ${VPCName}-Private-ENI
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}
+      - Key: Created_By
+        Value: !Sub ${Username}
+  PrivateSubnetRoute:
+    Type: "AWS::EC2::Route"
+    Properties: 
+      DestinationCidrBlock: "0.0.0.0/0"
+      NetworkInterfaceId: 
+        !Ref PrivateNetworkInterface
+      RouteTableId: 
+        !ImportValue PFSense-PrivateRouteTableID
+  PFSense: 
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !Sub ${PFSenseAmiId}
+      InstanceType: !Sub ${PFSenseInstanceType}
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Sub ${PublicNetworkInterface}
+          DeviceIndex: '0'
+        - NetworkInterfaceId: !Sub ${PrivateNetworkInterface}
+          DeviceIndex: '1'
+      KeyName: !Ref PFSenseKeyName
+      Tags:
+      - Key: Name
+        Value: !Sub ${VPCName}-PFSense
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !Sub ${VPCName}
+      - Key: Created_By
+        Value: !Sub ${Username}
+
+Outputs:
+  PFSensePublicInterface:
+    Description: PFSense Public Interface
+    Value: !Sub ${PublicNetworkInterface}
+    Export:
+      Name: "PFSense-PublicInterface"
+  PFSensePrivateInterface:
+    Description: PFSense Private Interface
+    Value: !Sub ${PrivateNetworkInterface}
+    Export:
+      Name: "PFSense-PrivateInterface"
+  PFSensePublicIP:
+    Description: PFSense Public IP
+    Value: !Sub ${PFSensePublicElasticIP}
+    Export:
+      Name: "PFSense-PublicIP"
+  PFSenseInstanceID:
+    Description: PFSense Instance ID
+    Value: !Sub ${PFSense}
+    Export:
+      Name: "PFSense-InstanceID"

@@ -1,0 +1,8 @@
+#get the files from the S3 bucket
+aws s3 sync s3://chicago202001-2sl-logs . --profile chicago202001
+
+#grep for the user accounts
+grep -rnw '.' -e 'gmail' | grep -v 'favicon' | cut -f6-7 -d '=' | grep -v 2ndsightlab | grep -v 3600 | grep -v acctnum | grep -v test | grep -v fake | sort | uniq | cut -f1-2 -d '&'
+
+#get and delete the files once you got them all
+aws s3 sync s3://chicago202001-2sl-logs . --profile chicago202001 --delete 

@@ -1,0 +1,76 @@
+{
+    "variables" : {
+        "aws_region" : "{{ env `AWS_REGION` }}",
+        "ami_name" : "Test-AMI-For-Lab-{{ timestamp }}",
+        "run_user" : "{{ env `RUN_USER` }}",
+        "vpc_id" : "{{ env `VPC_ID` }}",
+        "subnet_id" : "{{ env `SUBNET_ID` }}",
+        "terraform_version" : "0.11.11",
+        "packer_version" : "1.3.3",
+        "amzn_2_ami" : "ami-01e24be29428c15b2"
+    },
+    "builders" : [
+        {
+            "name" : "AMI Builder Lab",
+            "type" : "amazon-ebs",
+            "ami_name" : "{{user `ami_name` | clean_ami_name}}",
+            "ami_description" : "AMI Builder Lab",
+            "region" : "{{ user `aws_region` }}",
+            "source_ami" : "{{ user `amzn_2_ami` }}",
+            "instance_type" : "t3.micro",
+            "ssh_username" : "ec2-user",
+            "tags" : {
+                "Name" : "{{ user `ami_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}"
+            },
+            "run_tags" : {
+                "Name" : "{{ user `ami_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}",
+                "Run_Time" : "{{ timestamp }}"
+            },
+            "run_volume_tags" : {
+                "Name" : "{{ user `ami_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}",
+                "Run_Time" : "{{ timestamp }}"
+            },
+            "snapshot_tags" : {
+                "Name" : "{{ user `ami_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}",
+                "Run_Time" : "{{ timestamp }}"
+            },
+            "associate_public_ip_address" : true,
+            "vpc_id" : "{{ user `vpc_id` }}",
+            "subnet_id" : "{{ user `subnet_id` }}"
+        }
+    ],
+    "provisioners" : [
+        {
+            "type" : "shell",
+            "inline" : [
+                "sudo yum -y update",
+                "sudo yum -y install git "
+            ]
+        },
+        {
+            "type" : "shell",
+            "inline" :[
+                "sudo yum -y install python-pip",
+                "sudo pip install ansible awscli"
+            ]
+        },
+        {
+            "type" : "shell",
+            "inline" : [
+                "ansible-galaxy install git+https://github.com/anthcourtney/ansible-role-cis-amazon-linux.git"
+            ]
+        },
+        {
+            "type": "ansible-local",
+            "playbook_file": "scripts/playbook.yaml"
+        }
+    ]
+}

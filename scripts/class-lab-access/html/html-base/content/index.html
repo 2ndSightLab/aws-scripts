@@ -1,0 +1,117 @@
+<html>
+	<head>
+		<!--MAKING A CHANGE. C'MON CLOUDFRONT!!-->
+		<style>
+			body{font-family:arial;
+				padding:40px;}
+			td{padding:10px;}
+			button{padding:10px;font-size:14px;font-family:verdana;width:200px;}
+			input{padding:3px;font-size:14px;font-family:verdana;width:200px;border:1px solid #A9A9A9;}
+			a, a.visited{color:#34495E;}
+			.labtable{background-color:#C1E3E8;padding:8px;border:1px solid #5F9EA0}
+			b{color:#34495E;}
+			h3{color:#34495E;}
+		</style>
+		<script>
+			function getParameterByName(name, url) {
+		    if (!url) url = window.location.href;
+		    name = name.replace(/[\[\]]/g, '\\$&');
+		    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+		        results = regex.exec(url);
+		    if (!results) return null;
+		    if (!results[2]) return '';
+		    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+		}
+		</script>
+
+	</head>
+	<body >
+
+		<table class="no-padding" bgcolor="FFFFFF" border="0">
+			<tr>
+				<td valign="middle" style="background-color:white">
+					<img src="https://i.2ndsightlab.com/2nd-Sight-Lab.png" style="width:60%" class="no-padding"/>
+				</td>
+			</tr>
+		</table>
+
+		<table style="padding:40px">
+			<tr>
+				<td style="width:400px;padding-right:20px;" valign="top">
+
+					<H2>To Obtain Access to Lab Content:</H2>
+					<br/>
+					Submit your gmail address and account number below.
+					<form id="regform" name="regform" method="GET" action="thankyou.html">
+					<table style="padding:20px">
+						<tr>
+							<td><nobr>AWS Account Number:</nobr></td>
+							<td><input name="awsacctnum" id="awsacctnum"></td>
+						</tr>
+						<tr>
+							<td><nobr>Confirm gmail address:</nobr></td>
+							<td><input name="gmail" id="gmail"></td>
+						</tr>
+						<tr>
+							<td></td><td><button type="submit">Request Access</button></td>
+						</tr>
+					</table>
+
+					<i>By accessing the documents and materials
+					provided by 2nd Sight Lab in this portal, you are agreeing
+					to abide by the copyright notice below.</i>
+
+					<input type="hidden" id="id_token" name="id_token"/>
+					<input type="hidden" id="token_type" name="token_type" value="Bearer"/>
+					<input type="hidden" id="expires_in" name="token_type" value="3600"/>
+
+					<script>
+						const token = getParameterByName('id_token');
+						document.getElementById("id_token").setAttribute('value',token);
+					</script>
+
+					</form>
+
+
+				</td>
+				<td valign="top">
+
+					<H2>Documents</H2>
+					<table class="labtable" width="100%">
+					<tr>
+					<td>
+					<h3>Class Content</h3>
+
+					Class materials will be published here when class starts.
+
+					<br/><br/><a href="##lablink##" target="body">Slides</a>
+
+					<br/><br/><a href="##slidelink##" target="body">Labs</a>
+
+<br/><br>Please complete these instructions prior to class:				<br/><br/>
+					<a href="##startupdoclink##" target="body">Labs - Prerequisites and Setup</a>
+
+<br><br>
+Your class code repository is <b>##repo##</b>
+					</td>
+				</tr>
+				</table>
+
+				</td>
+			</tr>
+
+			<tr>
+				<td colspan="2">
+					<div style="padding-right:20px;padding-left:20px;padding-bottom:20px;border:1px solid #CCCCCC">
+					<H2>Copyright Notice</H2>
+					All Rights Reserved.<br/>
+					All course materials (the "Materials") are protected by copyright under U.S. Copyright laws and are the property of 2nd Sight Lab, LLC. They are provided pursuant to a royalty free, perpetual license to the course attendee (the "Attendee") to whom they were presented by 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, modified, used to create derivative works, transmitted to others, or used or exploited in any way, including, in whole or in part, as training materials by or for any third party.
+					<br/><br/>
+					ANY SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+				</div>
+			</td>
+			</tr>
+
+		</table>
+	</body>
+</html>

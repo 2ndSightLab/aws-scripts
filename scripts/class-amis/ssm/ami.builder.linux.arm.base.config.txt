@@ -1,0 +1,7 @@
+{
+"ami-description": "Base Linux AMI on which all the other 2nd Sight Lab Amis are built.",
+"volume-size": "16",
+"instance-type": "t4g.medium",
+"template": "Linux_Arm_Base.json",
+"ssm_param_base_ami": "ami.linux.arm.base.baseami.arm64"
+}

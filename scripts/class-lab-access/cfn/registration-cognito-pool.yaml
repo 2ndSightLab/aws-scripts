@@ -1,0 +1,221 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: 2SL Class Registration Cognito Resources
+Parameters:
+  ClassCode:
+    Description: unique class code
+    Type: String
+
+Resources:
+  # Domainname, logo, federation and identiy options, call back urls and some schema changes must be done manually
+  # Don't delete and re-add a domain - will have to pick a new domain after that...
+  # Can't use subdomains with multiple parts like a.b.whatever.com only a.whatever.com
+
+  SNSRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "cognito-idp.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      RoleName: !Join ["-",["CLS-2SL3000-",!Ref ClassCode, "-SNS-Role"]]
+      Policies:
+        - PolicyName: "CognitoSNSPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "sns:publish"
+                Resource: "*"
+
+  2slUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+          AllowAdminCreateUserOnly: true
+          InviteMessageTemplate:
+            EmailSubject: "Temporary Password for 2nd Sight Lab Class Portal"
+            EmailMessage: !Sub |
+              Thank you for attending 2nd Sight Lab's <b>Cloud Security Architecture and Engineering</b> class!
+              <br/><br/>
+              Username: <b>{username}</b><br/>
+              Temporary password: <b>{####}</b><br/>
+              Class portal: <b>https://${ClassCode}-cloud.2ndsightlab.com</b>
+              <br/><br/>
+              Please login, change the password, and complete the setup instructions before the first day of class.
+              Do not click the Forgot Password link until after you have logged in and changed your password.
+              <br/><br/>
+              If you have any problems following the setup instructions just show up a bit early
+              on the first day of class and your instructor will help you resolve any issues.
+              <br/><br/>
+              See you soon!<br/>
+              2nd Sight Lab
+      AutoVerifiedAttributes:
+        - email
+        - phone_number
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+        DeviceOnlyRememberedOnUserPrompt: true
+      EmailConfiguration:
+        ReplyToEmailAddress: class@2ndsightlab.com
+      MfaConfiguration: "OPTIONAL"
+      SmsConfiguration:
+        #TODO:what is this...
+        ExternalId: 2SL-external
+        SnsCallerArn: !GetAtt SNSRole.Arn
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 10
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+      Schema:
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: "aws-account-number"
+          StringAttributeConstraints:
+            MaxLength: 12
+            MinLength: 12
+          Required: No
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: "setup-complete"
+          StringAttributeConstraints:
+            MaxLength: 1
+            MinLength: 1
+          #THIS SHOULD BE YEST WHEN WE GET DONE
+          Required: No
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: "agree-to-terms"
+          StringAttributeConstraints:
+            MaxLength: 1
+            MinLength: 1
+          #THIS SHOULD BE YEST WHEN WE GET DONE
+          Required: No
+        - AttributeDataType: String
+          DeveloperOnlyAttribute: false
+          Mutable: true
+          Name: "gmail-address"
+          StringAttributeConstraints:
+            MaxLength: 1
+            MinLength: 1
+          #THIS SHOULD BE YEST WHEN WE GET DONE
+          Required: No
+      UsernameAttributes:
+        - email
+      UserPoolName: !Join ["-", ["2sl-ClassRegistration", !Ref ClassCode]]
+
+  # Creates a User Pool Client to be used by the identity pool
+  UserPoolClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties:
+      ClientName: !Join ["-", ["2SL-client", !Ref ClassCode]]
+      GenerateSecret: false
+      UserPoolId: !Ref 2slUserPool
+
+  # Creates a federeated Identity pool
+  IdentityPool:
+    Type: "AWS::Cognito::IdentityPool"
+    Properties:
+      IdentityPoolName: !Join ["",[2SLIdentity,!Ref ClassCode]]
+      AllowUnauthenticatedIdentities: true
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !GetAtt 2slUserPool.ProviderName
+
+  # Create a role for unauthorized acces to AWS resources. Very limited access. Only allows users in the previously created Identity Pool
+  CognitoUnAuthorizedRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: "cognito-identity.amazonaws.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": unauthenticated
+      RoleName: !Join ['-', ["CLS-2SL3000-Unauthorized", !Ref ClassCode]]
+      Policies:
+        - PolicyName: "CognitoUnauthorizedPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "mobileanalytics:PutEvents"
+                  - "cognito-sync:*"
+                Resource: "*"
+
+  # Create a role for authorized acces to AWS resources. Control what your user can access. This example only allows Lambda invokation
+  # Only allows users in the previously created Identity Pool
+  CognitoAuthorizedRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: "cognito-identity.amazonaws.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": authenticated
+      RoleName: !Join ['-', ["CLS-2SL3000-Authorized", !Ref ClassCode]]
+      Policies:
+        - PolicyName: "CognitoAuthorizedPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "mobileanalytics:PutEvents"
+                  - "cognito-sync:*"
+                  - "cognito-identity:*"
+                Resource: "*"
+              - Effect: "Allow"
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: "*"
+
+  # Assigns the roles to the Identity Pool
+  IdentityPoolRoleMapping:
+    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthorizedRole.Arn
+        unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
+
+Outputs:
+  UserPoolId:
+    Value: !Ref 2slUserPool
+    Export:
+      Name: !Sub "UserPoolId-${ClassCode}"
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub "UserPoolClientId-${ClassCode}"
+  IdentityPoolId:
+    Value: !Ref IdentityPool
+    Export:
+      Name: !Sub "IdentityPoolId-${ClassCode}"

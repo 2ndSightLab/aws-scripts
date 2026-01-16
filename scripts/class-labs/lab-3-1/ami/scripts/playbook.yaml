@@ -1,0 +1,14 @@
+- hosts: localhost
+  connection: local
+  become: yes
+  vars:
+    ansible_distribution: "Amazon"
+    ansible_distribution_version: "2017.12"
+    cis_level_1_exclusions:
+    - 5.4.4
+    - 3.4.2
+    - 3.4.3
+    - 6.2.13
+    - 1.1.18
+  roles:
+    - ansible-role-cis-amazon-linux

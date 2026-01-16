@@ -1,0 +1,103 @@
+# move to home directory, verify prowler is there
+cd ~
+ls
+
+# move into prowler directory
+cd prowler
+
+# run prowler
+./prowler
+
+# move to home directory and verify you see cloudmapper
+cd ~
+ls
+
+# move into cloudmapper directory and list the contents
+cd cloudmapper
+ls
+
+# copy the config.json.demo file to config.demo
+cp config.json.demo config.json
+
+# edit your config.json file
+vi config.json
+
+# edit the config file as shown in the lab
+
+# type escape, then wq! to exist vi
+
+# run cloudmapper with the following command to collect data
+python cloudmapper.py collect --account 2sl3000
+
+# look at the results as explained in the lab
+
+# return to the cloudmapper directory as explained in the lab
+
+# run the following command to generate a report
+python cloudmapper.py report --config config.json --account 2sl3000
+
+# follow the instructions in the lab to run a web server to view your report
+# make sure you are in the directory with the report html files
+python -m SimpleHTTPServer 8000
+
+# view your report
+http://[yourip]:8000/account-data/report.html
+
+# Install git on your Azure Windows AMI if it is not already installed
+# See lab for details
+
+# Clone the Azucar repo
+git clone https://github.com/nccgroup/azucar
+
+# Start Powershell
+Powershell
+
+# Run this command to unblock files
+Get-ChildItem -Recurse azucar | Unblock-File
+
+# Azucar help
+get-help .\Azucar.ps1 -Examples
+
+# View all options
+get-help .\azucar.ps1 -Detailed
+
+# Run a sample command
+.\azucar.ps1 -ExportTo CSV -Verbose -Analysis ActiveDirectory,Databases,SecurityAlerts,Firewall
+
+#SSH into a Google Linux instance
+
+#install git
+sudo apt install git-all
+
+# Clone the G-Scout repository
+git clone https://github.com/nccgroup/G-Scout.git
+
+# Install pip and virtualenv
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+sudo python get-pip.py
+sudo pip install virtualenv
+
+# Run G-Scout
+virtualenv -p python2 venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Get G-Scount help
+python gscout.py -h
+
+# Run this command to give your credentials to G-Scout
+gcloud auth application-default login
+
+# Follow the instructions in the lab to authorize the tool.
+
+# Run G-Scout on your project
+python gscout.py -p-name [your project name]
+
+# Make network settings changes specified in the lab
+
+# Run a simple web server and view your report
+cd Report\ Output/[your project id]/
+python -m SimpleHTTPServer 8000
+
+
+

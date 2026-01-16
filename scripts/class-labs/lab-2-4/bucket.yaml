@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A bucket for lab 2-4
+
+Parameters: 
+ 
+  BucketName: 
+    Description: Enter a unique bucket Name 
+    Type: String
+ 
+Resources:
+
+  WebSiteBucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: !Ref BucketName
+      CorsConfiguration:
+        CorsRules:
+          -
+            AllowedOrigins:
+              - 'http*'
+            AllowedMethods:
+              - HEAD
+              - GET
+              - PUT
+              - POST
+              - DELETE
+            AllowedHeaders:
+              - '*'
+            ExposedHeaders:
+              - ETag
+              - x-amz-meta-custom-header
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        ErrorDocument: index.html
+        IndexDocument: index.html
+
+Outputs:
+  Bucket:
+    Value: !Ref WebSiteBucket
+    Export: 
+      Name: WebBucket
+  BucketDomain:
+    Value: !GetAtt [WebSiteBucket, DomainName]
+    Export: 
+      Name: WebBucketDomain
+  BucketUrl:
+    Value: !Join ['', ['https://', !GetAtt [WebSiteBucket, DomainName]]]
+    Export: 
+      Name: WebBucketUrl
+  BucketArn:
+    Value: !Join ['', ["arn:aws:s3:::", !Ref WebSiteBucket, "/*"]]  
+    Export:
+      Name: WebBucketArn
+
+
+    

@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: 2SL Class Registration Domain Name
+          
+Parameters: 
+
+  ParamClassCode: 
+    Description: Class Code for var names
+    Type: String
+  ParamDomainName: 
+    Description: Create a Domain Name
+    Type: String
+  ParamContentOrAuth:
+    Description: Createing the content or the auth domain?
+    Type: String
+    AllowedValues: 
+      - Content
+      - Auth
+
+Resources:
+
+  ContentDomain:
+    Type: AWS::Route53::HostedZone
+    Properties: 
+      HostedZoneConfig: 
+        Comment: "Domain name for S3 bucket web content"
+      Name: !Ref ParamDomainName
+
+  DaominSSMParam:
+    Type: "AWS::SSM::Parameter"
+    Properties: 
+      Description: Domain SSM Parameter
+      Name: !Sub "${ParamClassCode}-${ParamContentOrAuth}Domain"
+      Type: String
+      Value: !Ref ParamDomainName
+
+Outputs:
+  HostedZoneId:
+    Value: !Ref ContentDomain
+    Export:
+      Name: !Sub "${ParamClassCode}-${ParamContentOrAuth}-DomainId"
+  DomainName:
+    Value: !Ref ParamDomainName
+    Export:
+      Name: !Sub "${ParamClassCode}-${ParamContentOrAuth}Domain"

@@ -1,0 +1,8 @@
+{
+"ami-builder-region": "us-east-2", 
+"ami-builder-vpc-id": "vpc-026e117579ce7c141", 
+"ami-builder-subnet-id": "subnet-010c4257fe079da0d", 
+"kms-key-id": "arn:aws:kms:us-east-2:639060417242:key/5a13ea71-0812-4ac9-9ef2-0134c51c465a", 
+"volume-size": "8", 
+"iam-profile": "arn:aws:iam::453844007816:role/packer-role"
+}

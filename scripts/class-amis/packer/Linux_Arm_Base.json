@@ -1,0 +1,68 @@
+{
+    "variables" : {
+    	"ami-builder-region" : "",
+    	"ami-name" : "",
+			"ami-description" : "",
+    	"ami-builder-vpc-id" : "",
+    	"ami-builder-subnet-id" : "",
+			"ami-owner" : "",
+    	"kms-key-id" : "",
+    	"ami" : "",
+    	"iam-profile" : "",
+    	"volume-size" : "16",
+    	"instance-type" : "",
+			"accesskeyid": "",
+			"accesskey": ""
+    },
+    "builders" : [
+        {
+						"skip_region_validation" : "true",
+            "name" : "{{user `ami-name` }}",
+            "type" : "amazon-ebs",
+            "ami_name" : "{{user `ami-name` }}",
+            "ami_description" : "{{user `ami-description` }}",
+						"region": "{{ user `ami-builder-region` }}",
+						"source_ami" : "{{ user `ami` }}",
+						"instance_type" : "{{ user `instance-type` }}",
+	    			"ssh_username" : "ec2-user",
+            "associate_public_ip_address" : true,
+            "vpc_id" : "{{ user `ami-builder-vpc-id` }}",
+            "subnet_id" : "{{ user `ami-builder-subnet-id` }}",
+	    			"tags" : {
+                "Name" : "{{ user `ami-name` }}"
+            },
+            "run_tags" : {
+                "Name" : "{{ user `ami-name` }}"
+            },
+            "run_volume_tags" : {
+                "Name" : "{{ user `ami-name` }}"
+            },
+            "snapshot_tags" : {
+                "Name" : "{{ user `ami-name` }}"
+            },
+     				"launch_block_device_mappings": [ 
+    	    		{
+                	"device_name": "/dev/xvda",
+                	"encrypted": "true",
+									"kms_key_id": "{{ user `kms-key-id` }}",
+									"volume_size": "{{ user `volume-size` }}",
+                	"delete_on_termination": true
+            	}
+	    			]
+			}	
+     ],
+     "provisioners" : [
+         {
+            "type" : "shell",
+            "execute_command": "chmod +x {{ .Path }}; . '{{ .Path }}' {{ user `processor` }}",
+            "scripts" : [
+										"scripts/linux-arm/base/set-paths.sh",
+                    "scripts/linux-arm/base/python3.sh",
+                    "scripts/linux-arm/base/awscli.sh",
+		    						"scripts/linux-arm/base/base-tools.sh",
+										"scripts/linux-arm/base/banner.sh",
+							 			"scripts/linux-arm/cleanup.sh"
+            ]
+         }
+    ]
+}

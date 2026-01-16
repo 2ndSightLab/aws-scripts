@@ -1,0 +1,161 @@
+<html>
+	<head>
+		<style>
+			body{font-family:arial;
+				padding:40px;}
+			td{padding:10px;}
+			button{padding:10px;font-size:14px;font-family:verdana;width:200px;}
+			input{padding:3px;font-size:14px;font-family:verdana;width:200px;border:1px solid #A9A9A9;}
+			a, a.visited{color:#34495E;}
+			.labtable{background-color:#C1E3E8;padding:8px;}
+			b{color:#34495E;}
+		</style>
+		<script>
+			function getParameterByName(name, url) {
+		    if (!url) url = window.location.href;
+		    name = name.replace(/[\[\]]/g, '\\$&');
+		    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+		        results = regex.exec(url);
+		    if (!results) return null;
+		    if (!results[2]) return '';
+		    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+		}
+		</script>
+
+	</head>
+	<body >
+
+		<table class="no-padding" bgcolor="FFFFFF" border="0">
+			<tr>
+				<td valign="middle" style="background-color:white">
+					<img src="https://i.2ndsightlab.com/2nd-Sight-Lab.png" style="width:60%" class="no-padding"/>
+				</td>
+			</tr>
+		</table>
+
+		<table style="padding:40px">
+			<tr>
+				<td style="width:400px;padding-right:20px;" valign="top">
+
+
+					<H2>To Obtain Access to Class Content:</H2>
+
+					<nobr>Complete the <b>Setup Instructions</b> to the right at least 5 days prior to class.</nobr>
+					<form id="regform" name="regform" method="GET" action="thankyou.html">
+					<table style="padding:20px">
+						<tr>
+							<td><nobr>AWS Account Number:</nobr></td>
+							<td><input name="awsacctnum" id="awsacctnum"></td>
+						</tr>
+						<tr>
+							<td><nobr>Gmail Address:</nobr></td>
+							<td><input name="gmail" id="gmail"></td>
+						</tr>
+						<tr>
+							<td colspan="2">By submitting your acount number you agree that you have completed the setup lab and will abide by the copyright notice below and keep class materials confidential.
+							<br/><br/>As noted in the setup material please use <i>new</i> and <i>non-production</i> accounts. Older accounts with settings that have been changed may not work correctly in the labs.
+							<br/><br/>Also note: 2nd Sight Labs is not going to access your account! We only share out the resources we created for you to use in class so you can focus on the labs instead of installing tools and messing with obscur configuration problems. The red team and blue team exercises are setup in a 2nd Sight Lab account which you will be able to access at the end of the week.</td>
+						</tr>
+						<tr>
+							<td></td><td><button type="submit">Request Access</button></td>
+						</tr>
+					</table>
+					<input type="hidden" id="id_token" name="id_token"/>
+					<input type="hidden" id="token_type" name="token_type" value="Bearer"/>
+					<input type="hidden" id="expires_in" name="token_type" value="3600"/>
+
+					<script>
+						const token = getParameterByName('id_token');
+						document.getElementById("id_token").setAttribute('value',token);
+					</script>
+
+					</form>
+
+					<div style="padding-right:20px;padding-left:20px;padding-bottom:20px;border:1px solid #CCCCCC">
+					<H2>Copyright Notice</H2>
+					All Rights Reserved.<br/>
+					All course materials (the "Materials") are protected by copyright under U.S. Copyright laws and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, perpetual license to the course attendee (the "Attendee") to whom they were presented by 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, modified, used to create derivative works, transmitted to others, or used or exploited in any way, including, in whole or in part, as training materials by or for any third party.
+					<br/><br/>
+					ANY SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+				</div>
+
+				</td>
+					<td valign="top">
+					<H2>Documents</H2>
+					<table class="labtable">
+					<tr>
+					<td>
+					<b>Setup Instructions</b>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1TCSO49jzOHaQ9jyijY7RXqDUmiyiKZOgD455mnOIbus/edit?usp=sharing" target="body">Lab 0 - Class Prerequisites and Setup</a>
+					<br/><br/>
+					<b>Day 1</b>
+					<br/><br/>
+					<a href="https://docs.google.com/presentation/d/1gt0q9Nak5iDlsXLvQamcrgqrIWNPfILLABS7BuQKfMg/edit?usp=sharing" target="body">Slides: Cloud Security Strategy and Planning
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1N-J2fNEIuWLAtAYk7RI-1JostvxbRxNpiD5E2_G2m-Q/edit?usp=sharing" target="body">Lab 1-1 Introduction to Automation</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1wF_LfYyhEXXNai3PGeouhfrmDWi1NnTVbYKGnoCsPuk/edit?usp=sharing" target="body">Lab 1-2 Cloud Self Assessment</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1EjyXfNgorsK1ILzpfTbdjmaUsaSggREzsiMfj9UYOvs/edit?usp=sharing">Lab 1-3 Cloud Budgets and Calculators</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1PC9gKyvvVoAW5dR7GVp9UEvuaTX8Jq8aGma6IQCLLmc/edit?usp=sharing" target="body">Lab 1-4 Sharing Secrets with GPG</a>
+					<br/><br/>
+					<b>Day 2</b>
+					<br/><br/>
+					<a href="https://docs.google.com/presentation/d/1jzGhnTFJmO8WZOWADuD_4IYS-luf_7Lbjke3cjWDikU/edit?usp=sharing">Slides: Network Security</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/17p7Vrc8jfgdwJF4ofH1lXbV5b31LHL2YMN4v6iMlJlU/edit?usp=sharing">Lab 2-1 Three-Tier-Network</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1mzYjqJFQWBnYjiDGQ5BDD-IF4wEWU47euDadzoeLowg/edit?usp=sharing">Lab 2-2 VPNs in the Cloud</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1mzYjqJFQWBnYjiDGQ5BDD-IF4wEWU47euDadzoeLowg/edit?usp=sharing">Lab 2-3 CDN and WAF </a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/14yit2Ih76sYS7jneUda7kicuA97X5mHO5DA_P66zshQ/edit?usp=sharing">Lab 2-4 Network Logs in the Cloud</a>
+					<br/><br/>
+					<b>Day 3</b>
+					<br/><br/>
+					<a href="https://docs.google.com/presentation/d/17E8G6QBkIMxiIzYaIOsedgp7wAsnr43H_p44XGaAkBY/edit?usp=sharing">Slides: Data and Appliaction Security</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1aHN_BlsW6c36xG40hP5v2d8tnzZE_1xxQCTDoqCEGjs/edit?usp=sharing">Lab 3-1 Virtual Machine Images</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1kFb_E6skikT8LaxABP0UogQGG4Zors-UTUmsQWu1Fbk/edit?usp=sharing">Lab 3-2 Containers</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1BYlwmkALKYxPOfYYIpXqqVSiP9vPLkOJkKo7eBaoP9c/edit?usp=sharing">Lab 3-3 S3 + Encryption</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1jLgTNpThRbjiQx4T72Wcsd3Ms3XZtHQAFMQc1YeFZNw/edit?usp=sharing">Lab 3-4 Serverless + API Gateway </a>
+					<br/><br/>
+					<b>Day 4</b>
+					<br/><br/>
+					<a href="hhttps://docs.google.com/presentation/d/17E8G6QBkIMxiIzYaIOsedgp7wAsnr43H_p44XGaAkBY/edit?usp=sharing">Slides: Access Deployments and Monitoring </a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1oCD9uyu-wDvB3y3fKpoZeUdC56LOXs0dz-F9poSQf6U/edit?usp=sharing">Lab 4-1 IAM Policies </a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1iBZHRJrkh8NW-zTkS1QP-xPN0ZDSS-8hy-Jqul5o_m8/edit?usp=sharing">Lab 4-2 DevSecOps with Jenkins</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1iLIbfni6X0fSmdYO5BVS5LwU533DbtPUsflrBfYoXgs/edit?usp=sharing">Lab 4-3 Multi-Cloud Deployments</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1e-F7c1tz_CrvIks8w2uqSAP4kwAs3AW75K62Mw5JWCU/edit?usp=sharing">Lab 4-4 More Logging and Monitoring</a>
+					<br/><br/>
+					<b>Day 5</b>
+					<br/><br/>
+					<a href="https://docs.google.com/presentation/d/1y6EpEHZAOUO5ev3pJUkG5NBcUXJ07YsHxeNE8vvZsLg/edit?usp=sharing">Slides: Red Team vs. Blue Team</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1Rg-E54FGxe1gvRzXec7_COGVl8I4ar5ZlCj-HM4uOig/edit?usp=sharing">Lab 5-1 Cloud Architecture</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1U3tWCwJt7NhnHwBJ3QREbQvJGurGfjUwqPjrMOeZdEg/edit?usp=sharing">Lab 5-2 Threat Modeling</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1U3tWCwJt7NhnHwBJ3QREbQvJGurGfjUwqPjrMOeZdEg/edit?usp=sharing">Lab 5-3 Cloud Assessment</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1n9kziYGtEd0M5sed98SgqP8PfFas9kRWdJZr4qf3FWY/edit?usp=sharing">Lab 5-4 Cloud Pentest</a>
+					<br/><br/>
+					<a href="https://docs.google.com/document/d/1pq-JnjUn77xpCdo035gP_bbCryWlVM3X1BmrF_Bj-Ro/edit?usp=sharing">Lab 5-5 Cloud Incident</a>
+					<br/><br/>
+					</td>
+					</table>
+
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

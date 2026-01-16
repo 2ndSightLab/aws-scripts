@@ -1,0 +1,69 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "ec2:describe*",
+                "ec2:CreateSnapshot",
+                "ec2:CreateImage",
+                "ec2:CreateKeyPair",
+                "ec2:DeleteKeyPair",
+                "ec2:RegisterImage",
+                "ec2:ModifyImageAttribute",
+                "ec2:RunInstances",
+                "ec2:GetPasswordData"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Condition": {
+                "StringEquals": {
+                    "ec2:CreateAction": "RunInstances"
+                }
+            },
+            "Action": [
+                "ec2:CreateTags"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:volume/*",
+                "arn:aws:ec2:*:*:instance/*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Condition": {
+                "StringEquals": {
+                    "ec2:ResourceTag/${tag_name}": "${tag_value}"
+                }
+            },
+            "Action": [
+                "ec2:StopInstances",
+                "ec2:RebootInstances",
+                "ec2:TerminateInstances"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/${tag_name}": "${tag_value}"
+                },
+                "ForAllValues:StringEquals": {
+                    "aws:TagKeys": [
+                        "${tag_name}"
+                    ]
+                }
+            },
+            "Action": [
+                "ec2:DeleteSnapshot",
+                "ec2:DeregisterImage",
+                "ec2:CreateVolume",
+                "ec2:StartInstances"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        }
+    ]
+}

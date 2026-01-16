@@ -1,0 +1,236 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws 
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, 
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by 
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials 
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, 
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way, 
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or 
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES 
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: 3-SGs
+
+Parameters:
+  Username:
+    Description: Your username for taggging resources.
+    Type: String
+    Default: Username
+  DNSServer:
+    Description: On-Prem DNS Server
+    Type: String
+    Default: "10.20.0.0/24"
+
+Resources:
+  # ------------------------------------------------
+  # Public Security Group
+  # ------------------------------------------------
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Web-SecurityGroup
+      VpcId: !ImportValue "Lab-2-2-VPCID"
+      SecurityGroupEgress: 
+      - CidrIp: 127.0.0.1/32
+        IpProtocol: tcp
+        FromPort: 0
+        ToPort: 65535      
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-Web-SecurityGroup
+          - VPCName: !ImportValue Lab-2-2-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-2-VPCName
+      - Key: Created_By
+        Value: !Sub ${Username}
+
+  WebSecurityGroupIngress1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref WebSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80  
+      CidrIp: 0.0.0.0/0
+  WebSecurityGroupIngress2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref WebSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443  
+      CidrIp: 0.0.0.0/0
+  WebSecurityGroupEgress1:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref WebSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080  
+      DestinationSecurityGroupId: !Ref ApplicationSecurityGroup
+
+  # ------------------------------------------------
+  # Application Security Group
+  # ------------------------------------------------
+  ApplicationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Application-SecurityGroup
+      VpcId: !ImportValue "Lab-2-2-VPCID"
+      SecurityGroupEgress: 
+      - CidrIp: 127.0.0.1/32
+        IpProtocol: tcp
+        FromPort: 0
+        ToPort: 65535 
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-Application-SecurityGroup
+          - VPCName: !ImportValue Lab-2-2-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-2-VPCName
+      - Key: Created_By
+        Value: !Sub ${Username}
+
+  ApplicationSecurityGroupIngress1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ApplicationSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080  
+      SourceSecurityGroupId: !Ref WebSecurityGroup
+  ApplicationSecurityGroupEgress1:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref ApplicationSecurityGroup
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306  
+      DestinationSecurityGroupId: !Ref DatabaseSecurityGroup
+
+  # ------------------------------------------------
+  # Database Security Group
+  # ------------------------------------------------
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Database-SecurityGroup
+      VpcId: !ImportValue "Lab-2-2-VPCID"
+      SecurityGroupEgress: 
+      - CidrIp: 127.0.0.1/32
+        IpProtocol: tcp
+        FromPort: 0
+        ToPort: 65535 
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-Database-SecurityGroup
+          - VPCName: !ImportValue Lab-2-2-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-2-VPCName
+      - Key: Created_By
+        Value: !Sub ${Username}
+
+  DatabaseSecurityGroupIngress1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroup
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306  
+      SourceSecurityGroupId: !Ref ApplicationSecurityGroup
+
+  # ------------------------------------------------
+  # Common Services Security Group
+  # ------------------------------------------------
+  CommonServicesSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Common-Services
+      VpcId: !ImportValue "Lab-2-2-VPCID"
+      SecurityGroupEgress: 
+      - DestinationSecurityGroupId: !Ref DNSSecurityGroup
+        IpProtocol: udp
+        FromPort: 53
+        ToPort: 53 
+      - DestinationSecurityGroupId: !Ref DNSSecurityGroup
+        IpProtocol: tcp
+        FromPort: 53
+        ToPort: 53 
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-Common-Services
+          - VPCName: !ImportValue Lab-2-2-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-2-VPCName
+      - Key: Created_By
+        Value: !Sub ${Username}
+
+
+  # ------------------------------------------------
+  # Common Services Security Group
+  # ------------------------------------------------
+  DNSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: DNS-Security-Group
+      VpcId: !ImportValue "Lab-2-2-VPCID"
+      SecurityGroupEgress: 
+      - CidrIp: !Sub ${DNSServer}
+        IpProtocol: tcp
+        FromPort: 53
+        ToPort: 53
+      - CidrIp: !Sub ${DNSServer}
+        IpProtocol: udp
+        FromPort: 53
+        ToPort: 53
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-DNS-Security-Group
+          - VPCName: !ImportValue Lab-2-2-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-2-VPCName
+      - Key: Created_By
+        Value: !Sub ${Username}
+
+  DNSSecurityGroupIngress1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DNSSecurityGroup
+      IpProtocol: tcp
+      FromPort: 53
+      ToPort: 53  
+      SourceSecurityGroupId: !Ref CommonServicesSecurityGroup
+  DNSSecurityGroupIngress2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DNSSecurityGroup
+      IpProtocol: udp
+      FromPort: 53
+      ToPort: 53  
+      SourceSecurityGroupId: !Ref CommonServicesSecurityGroup

@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: SSL certificate for content domain name
+
+Parameters:
+  ParamClassCode:
+    Description: Creating the content or the auth domain?
+    Type: String
+  ParamContentOrAuth:
+    Description: Creating the content or the auth domain?
+    Type: String
+    AllowedValues: 
+      - Content
+      - Auth
+  
+Resources:
+  Cert:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: 
+        Fn::ImportValue: 
+          !Sub "${ParamClassCode}-${ParamContentOrAuth}Domain"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: 
+            Fn::ImportValue: 
+              !Sub "${ParamClassCode}-${ParamContentOrAuth}Domain"
+          ValidationDomain: 
+            Fn::ImportValue: 
+              !Sub "${ParamClassCode}-${ParamContentOrAuth}Domain"
+
+Outputs:
+  Cert:
+    Value: !Ref Cert
+    Export:
+      Name: !Sub "${ParamContentOrAuth}Cert-${ParamClassCode}"

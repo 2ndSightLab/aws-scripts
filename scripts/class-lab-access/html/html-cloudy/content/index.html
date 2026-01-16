@@ -1,0 +1,302 @@
+<html>
+	<head>
+		<style>
+			body{font-family:arial;
+				padding:40px;}
+			td{padding:10px;}
+			button{padding:10px;font-size:14px;font-family:verdana;width:200px;}
+			input{padding:3px;font-size:14px;font-family:verdana;width:200px;border:1px solid #A9A9A9;}
+			a, a:visited{color:#34495E;}
+			.labtable{background-color:#C1E3E8;padding:8px;}
+			b{color:#34495E;}
+			h3{color:#34495E;}
+			.test, .test:visited, .test:link{color:orange;}
+			.write, .write:visited, .write:link{color:blue;}
+			.revise, .revise:visited, .revise:link{color:purple;}
+			.code, .code:visited, .code:link{color:red;}
+			.todo, .todo:visited, .todo:link{color:orange;}
+			.ok, .ok:visited, .ok:link{color:green;}
+		</style>
+		<script>
+			function getParameterByName(name, url) {
+		    if (!url) url = window.location.href;
+		    name = name.replace(/[\[\]]/g, '\\$&');
+		    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+		        results = regex.exec(url);
+		    if (!results) return null;
+		    if (!results[2]) return '';
+		    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+		}
+		</script>
+
+
+	</head>
+	<body >
+
+		<table class="no-padding" bgcolor="FFFFFF" border="0">
+			<tr>
+				<td valign="middle" style="background-color:white">
+					<img src="https://i.2ndsightlab.com/2nd-Sight-Lab.png" style="width:60%" class="no-padding"/>
+				</td>
+			</tr>
+		</table>
+
+		<table style="padding:40px">
+			<tr>
+				<td style="width:400px;padding-right:20px;" valign="top">
+
+					<H2>To Obtain Access to Class Content:</H2>
+
+					Complete the <b>Prerequisites and Set Up Lab</b> to the right. Then submit your AWS account number below.
+					<br/>
+
+					<form id="regform" name="regform" method="GET" action="thankyou.html">
+					<table style="padding:20px">
+						<tr>
+							<td><nobr>AWS Account Number:</nobr></td>
+							<td><input name="awsacctnum" id="awsacctnum"></td>
+						</tr>
+						<tr>
+							<td><nobr>Confirm gmail address:</nobr></td>
+							<td><input name="gmail" id="gmail"></td>
+						</tr>
+						<tr>
+							<td colspan="2">By submitting your acount number you agree that you have <i>completed the setup lab</i> and will abide by the copyright notice below and keep class materials confidential.
+							</td>
+						</tr>
+						<tr>
+							<td></td><td><button type="submit">Request Access</button></td>
+						</tr>
+					</table>
+					<!--not ideal-->
+					<input type="hidden" id="id_token" name="id_token"/>
+					<input type="hidden" id="token_type" name="token_type" value="Bearer"/>
+					<input type="hidden" id="expires_in" name="token_type" value="3600"/>
+
+					<script>
+						const token = getParameterByName('id_token');
+						document.getElementById("id_token").setAttribute('value',token);
+					</script>
+
+					</form>
+					<div style="padding-right:20px;padding-left:20px;padding-bottom:20px;border:1px solid #CCCCCC">
+
+					<H2>Copyright Notice</H2>
+					All Rights Reserved.<br/>
+					All course materials (the "Materials") are protected by copyright under U.S. Copyright laws and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, perpetual license to the course attendee (the "Attendee") to whom they were presented by 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, modified, used to create derivative works, transmitted to others, or used or exploited in any way, including, in whole or in part, as training materials by or for any third party.
+					<br/><br/>
+					ANY SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+				</div>
+
+				</td>
+					<td valign="top">
+
+					<H2>Documents</H2>
+					<table class="labtable">
+					<tr>
+					<td>
+					<span class="code">
+						<< this code is not fully automated - automate sharing out the AMIs
+					</span>
+					<br/><br/>
+					<a href="https://drive.google.com/drive/folders/1rHJVvovrUaNwvzNHqS93BDnp9pveyiOV?usp=sharing" target="body" >SLIDES FOLDER</a>
+					<br/><br/>
+					<a href="https://drive.google.com/drive/folders/1CJIw_E63mMALo3305I7hW5E-w76c2S8N?usp=sharing" target="body" >LABS FOLDER</a>
+					<br/><br/>
+					Lab checks:<br/>
+					- correct title matching slides and file name<br/>
+					- correct footer name and page numbers<br/>
+					- clean up section<br/>
+					- scripts.txt file exactly matches steps in labs<br/>
+					- all screen shots correct<br/>
+					- code works<br/>
+					- scripts.txt file for every lab<br/>
+					- all scripts in lab and scripts.txt file match<br/>
+					- templates and cloudformation stacks have correct descriptions<br/>
+					<br/>
+					<b>Lab 0 - Class Prerequisites and Setup</b>
+					<br/>
+					<span class="ok">No complaints.</span>
+					<br/><br/>
+					<b>Day 1</b>
+					<br/><br/>
+					<b>Slides: Cloud Security Strategy and Planning</b>
+					<br/>
+					<span class="todo">Spell check, grammar, formatting.</span>
+					<br/><br/>
+					<b>Lab 1-1 Introduction to Automation</b>
+					<br/>
+					<span class="ok">ok<span>
+					<br/><br/>
+					<b>Lab 1-2 Cloud Self Assessment</b>
+					<br/>
+					<span class="ok">ok<span>
+					<br/><br/>
+					<b>Lab 1-3 Cloud Budgets and Calculators</b>
+					<br/>
+					<span class="ok">ok<span>
+					<br/><br/>
+					<b>Lab 1-4 Sharing Secrets with GPG</b>
+					<br/>
+					<span class="ok">No problems - but could use another pass because not many students ran it.<span>
+					<br/><br/>
+					<b>Day 2</b>
+					<br/><br/>
+					<b>Slides: Network Security</b>
+					<br/>
+					<span class="todo">
+						Notes in progress. Rearranging some slides - not done!
+					</span>
+					<br/><br/>
+					<b>Lab 2-1 Three-Tier-Network</b>
+					<br/>
+					<span class="ok">ok</span>
+					<br/><br/>
+					<b>Lab 2-2 VPNs in the Cloud</b>
+					<br/>
+						<span class="ok">
+							ok
+						</span>
+					<br/><br/>
+					<b>Lab 2-3 CDN and WAF </b>
+					<br/>
+					<span class="ok">ok</span>
+					<br/><br/>
+					<b>Lab 2-4 Network Logs in the Cloud</b>
+					<br/>
+					<span class="ok">ok</span>
+					<br/><br/>
+					<b>Day 3</b>
+
+					<br/><br/>
+					<b>Slides: Data and Appliaction Security</b>
+					<br/><br/>
+					<span class="todo">
+						Footers, formatting, spelling, notes.
+					</span>
+					<br/><br/>
+					<b>Lab 3-1 Virtual Machine Images</b>
+					<br/><br/>
+					<span class="code">Updated doc.	Kolby says he tested in free acct so that should work.
+						Couldn't run in shared acct. Sam is in shared account so if can fix this he can test.
+						** Add commands to reeset or re-get password if they missed it the first time as won't appear again.
+						(I might have put something in the labs already I don't remember but people that missed getting the password
+						couldn't get it again after.)
+				</span>
+					<br/><br/>
+					<b>Lab 3-2 Containers</b>
+					<br/><br/>
+					<span class="code">
+					Fix the role and missing step. Not sure if I fixed and checked this in already?
+					As discused, will add root drive mapping - show how they can see too much, then have them fix. Few add'l steps for lab.
+				</span>
+					<br/><br/>
+					<b>Lab 3-3 S3 + Encryption</b>
+					<br/><br/>
+					<span class="code">
+					Sam - please test.
+				</span>
+				<br/><br/>
+					<b>Lab 3-4 Serverless + API Gateway </b>
+					<br/><br/>
+					<span class="code">
+					LDS Director claimed code hardcoded into lambda was not used. Was probably
+					just explained wrong in lab. Kolby
+					double checking - then Teri + Kolby will talk and verify lab docs match what code is doing.
+					Code will do three things - showing secret in code, then not after fix:
+					1. creds in code (in python file is fine), 2. Creds in environment var 3. creds passed in via cloudformation shows in params.
+
+				</span>
+					<br/><br/>
+					<b>Day 4</b>
+					<br/><br/>
+					<b>Slides: Access Deployments and Monitoring </b>
+					<br/><br/>
+					<span class="todo">
+					Footers, formatting, spelling, notes.
+
+					</span>
+
+
+					<br/><br/>
+					<b>Lab 4-1 IAM Policies </b>
+					<br/><br/>
+						<span class="ok">Lab was OK.</span>
+
+					<br/><br/>
+					<b>Lab 4-2 DevSecOps with Jenkins</b>
+					<br/><br/>
+					<span class="code">Add a job - w OWASP dependency checker checking and either reporting on CVEs or blocking
+						the deployment if any found - so need some code w/a CVE. The node CLI on my github has a CVE if want to download and include that somehow.
+					But there may be something simpler.</span>
+					<br/><br/>
+					<b>Lab 4-3 Multi-Cloud Deployments</b>
+					<br/><br/>
+					<span class="code">
+					This lab fails in a free trial account for the Azure portion - need to figure out why.
+					Multiple people got this error - if they were doing something wrong can update the lab.
+					</span>
+					<br/><br/>
+					<b>Lab 4-4 More Logging and Monitoring</b>
+					<br/><br/>
+					<span class="ok">
+					Only one person did this lab - everyone else walked out. He did it ok but he was technical.
+					Maybe move this lab before end.
+					</span>
+					<br/><br/>
+					<b>Day 5</b>
+					<br/><br/>
+					<b>Slides: Red Team vs. Blue Team</b>
+					<br/><br/>
+					<span class="todo">	Footers, formatting, spelling, notes. </todo>
+					<br/><br/>
+					<b>Lab 5-1 Cloud Architecture</b>
+					<br/><br/>
+					<span class="ok">
+					This lab good. Should have brought up process issues.
+					</span>
+					<br/><br/>
+					<b>Lab 5-2 Threat Modeling</b>
+					<br/><br/>
+					<span class="todo">
+					Went ok in beta. No one did this at LDS they just started talking or left the room. Maybe needs to change.
+					</span>
+					<br/><br/>
+					<b>Lab 5-3 Cloud Assessment</b>
+					<br/><br/>
+					<span class="ok">
+					This lab is good.
+					Only thing is - are there any tools for Azure? Or just use Azure tools?
+					Fix things found?
+					</span>
+					<br/><br/>
+					<b>Lab 5-4 Cloud Pentest</b>
+					<br/><br/>
+					<span class="code">
+					Teri working on this. Move attacked machines to internal IPs, use bastion host.
+					</span>
+					<br/><br/>
+					<b>Lab 5-5 Cloud Incident</b>
+					<br/><br/>
+					<span class="code">
+					Teri working on this. Very close. Need to recreate steps in new accouts.
+					</span>
+					<br/><br/>
+					<b>Lab Cleanup</b>
+					<br/><br/>
+					<span class="code">
+					ADD A CLEANUP DOC. Also every lab should have cleanup Instructions
+					at the end with a script to delete everything. It can be part of a
+					larger script included in this doc at the end of class.
+					</span>
+					<br/><br>
+					<b>Survey</b>
+					<br/><br/>
+					<span class="ok">
+					Surveys are good - using google forms - working well.
+					Would like to automate generation of report and tracking over time.
+					</span>
+					</td>
+					</table
+	</body>
+</html>

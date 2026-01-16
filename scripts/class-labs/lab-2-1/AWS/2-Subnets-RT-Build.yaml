@@ -1,0 +1,184 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws 
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, 
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by 
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials 
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, 
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way, 
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or 
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES 
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: 2-Subnets & RTs
+
+Parameters:
+  Username:
+    Description: Your username for tagging resources.
+    Type: String
+    Default: Username
+
+Resources:
+  BaseVPCPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: 
+        !Select 
+          - 0
+          - !GetAZs
+            Ref: 'AWS::Region'
+      VpcId: !ImportValue "Lab-2-1-VPCID"
+      CidrBlock: !Select [ 0, !Cidr [ !ImportValue "Lab-2-1-VPCCidr", 16, 8 ] ]
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-PublicSubnet1
+          - VPCName: !ImportValue Lab-2-1-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-1-VPCCidr
+      - Key: Created_By
+        Value: !Sub ${Username}
+  BaseVPCPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !ImportValue "Lab-2-1-VPCID"
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-Public-RouteTable
+          - VPCName: !ImportValue Lab-2-1-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-1-VPCCidr
+      - Key: Created_By
+        Value: !Sub ${Username}
+  BaseVPCPublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Sub ${BaseVPCPublicSubnet}
+      RouteTableId: !Sub ${BaseVPCPublicRouteTable}
+  BaseVPCPublicDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Sub ${BaseVPCPublicRouteTable}
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !ImportValue Lab-2-1-InternetGateway
+  BaseVPCPublicDefaultRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Sub ${BaseVPCPublicSubnet}
+      RouteTableId: !Sub ${BaseVPCPublicRouteTable}
+
+  BaseVPCApplicationSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: 
+        !Select 
+          - 0
+          - !GetAZs
+            Ref: 'AWS::Region'
+      VpcId: !ImportValue "Lab-2-1-VPCID"
+      CidrBlock: !Select [ 1, !Cidr [ !ImportValue "Lab-2-1-VPCCidr", 16, 8 ] ]
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-ApplicationSubnet1
+          - VPCName: !ImportValue Lab-2-1-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-1-VPCCidr
+      - Key: Created_By
+        Value: !Sub ${Username}
+  BaseVPCApplicationRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !ImportValue "Lab-2-1-VPCID"
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-Application-RouteTable
+          - VPCName: !ImportValue Lab-2-1-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-1-VPCCidr
+      - Key: Created_By
+        Value: !Sub ${Username}
+  BaseVPCApplicationRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Sub ${BaseVPCApplicationSubnet}
+      RouteTableId: !Sub ${BaseVPCApplicationRouteTable}
+
+  BaseVPCDatabaseSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: 
+        !Select 
+          - 0
+          - !GetAZs
+            Ref: 'AWS::Region'
+      VpcId: !ImportValue "Lab-2-1-VPCID"
+      CidrBlock: !Select [ 2, !Cidr [ !ImportValue "Lab-2-1-VPCCidr", 16, 8 ] ]
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-DatabaseSubnet1
+          - VPCName: !ImportValue Lab-2-1-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-1-VPCCidr
+      - Key: Created_By
+        Value: !Sub ${Username}
+  BaseVPCDatabaseRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !ImportValue "Lab-2-1-VPCID"
+      Tags:
+      - Key: Name
+        Value: !Sub 
+          - ${VPCName}-Database-RouteTable
+          - VPCName: !ImportValue Lab-2-1-VPCName
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: VPC_Name
+        Value: !ImportValue Lab-2-1-VPCCidr
+      - Key: Created_By
+        Value: !Sub ${Username}
+  BaseVPCDatabaseRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Sub ${BaseVPCDatabaseSubnet}
+      RouteTableId: !Sub ${BaseVPCDatabaseRouteTable}
+
+Outputs:
+  PublicSubnet:
+    Description: Public Subnet
+    Value: !Sub ${BaseVPCPublicSubnet}
+    Export:
+      Name: "Lab-2-1-Public-Subnet"
+  ApplicationSubnet:
+    Description: Application Subnet
+    Value: !Sub ${BaseVPCApplicationSubnet}
+    Export:
+      Name: "Lab-2-1-Application-Subnet"
+  DatabaseSubnet:
+    Description: Database Subnet
+    Value: !Sub ${BaseVPCDatabaseSubnet}
+    Export:
+      Name: "Lab-2-1-Database-Subnet"

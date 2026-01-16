@@ -1,0 +1,96 @@
+{
+    "variables" : {
+    	"region" : "",
+			"name" : "",
+    	"ami-name" : "",
+			"ami-description" : "",
+    	"vpc-id" : "",
+    	"subnet-id" : "",
+    	"ami" : "",
+    	"ami-type" : "",
+    	"volume-size" : "",
+    	"instance-type" : ""
+    },
+    "builders" : [
+        {
+            "name" : "{{user `name` }}",
+            "type" : "amazon-ebs",
+            "ami_name" : "{{user `ami-name` }}",
+            "ami_description" : "{{user `ami-description` }}",
+            "region" : "{{ user `ami-builder-region` }}",
+            "source_ami" : "{{ user `ami` }}",
+	    			"instance_type" : "{{ user `instance-type` }}",
+            "user_data_file" : "scripts/windows/powershell/userdata.ps1",
+            "communicator" : "winrm",
+            "winrm_username" : "Administrator",
+            "winrm_use_ssl" : true,
+            "winrm_insecure" : true,
+            "tags" : {
+                "Name" : "{{ user `ami-name` }}"
+            },
+            "run_tags" : {
+                "Name" : "{{ user `ami-name` }}"
+            },
+            "run_volume_tags" : {
+                "Name" : "{{ user `ami-name` }}"
+            },
+            "snapshot_tags" : {
+                "Name" : "{{ user `ami-name` }}"
+            },
+            "associate_public_ip_address" : true,
+            "vpc_id" : "{{ user `ami-builder-vpc-id` }}",
+            "subnet_id" : "{{ user `ami-builder-subnet-id` }}",
+            "launch_block_device_mappings": [
+              {
+                  "device_name": "/dev/sda1",
+                  "encrypted": "true",
+                  "kms_key_id": "{{ user `kms-key-id` }}",
+                  "volume_size": "{{ user `volume-size` }}",
+                  "delete_on_termination": true
+              }
+            ]
+        }
+    ],
+    "provisioners" : [
+        {
+            "type": "powershell",
+            "scripts": [
+                "scripts/windows/powershell/uac.ps1",
+                "scripts/windows/powershell/chocolatey.ps1"
+	    			]
+        },
+        {
+            "type": "windows-shell",
+            "inline": [
+								"choco feature enable -n allowGlobalConfirmation",
+                "choco install awscli -y",
+                "choco install git -y --params=\"/GitAndUnixToolsOnPath /NoAutoCrlf\"",
+								"refreshenv"
+	     			]
+				},
+				{
+            "type": "windows-shell",
+            "inline": [
+								"choco install wget -y",
+                "choco install pypy3 -y",
+                "choco install googlechrome -y",
+								"del \"C:\\Users\\Administrator\\Desktop\\EC2 Feedback.website\"",
+                "del \"C:\\Users\\Administrator\\Desktop\\EC2 Microsoft Windows Guide.website\""
+            ]
+				},
+        {
+            "type": "powershell",
+            "scripts": [
+                "scripts/windows/powershell/un-uac.ps1"
+            ]
+        },
+        {
+            "type": "powershell",
+            "inline": [
+              "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\SendWindowsIsReady.ps1 -Schedule",
+              "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\InitializeInstance.ps1 -Schedule",
+              "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\SysprepInstance.ps1 -NoShutdown"
+            ]
+        }
+    ]
+}

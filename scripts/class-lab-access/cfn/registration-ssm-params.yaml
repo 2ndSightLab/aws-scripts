@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+  ParamClassCode: 
+    Description: "class code"
+    Type: String
+
+Resources:
+
+  AuthLambdaRegion:
+    Type: "AWS::SSM::Parameter"
+    Properties: 
+      Description: The region in which the auth stuff lives used by the lambda function
+      Name: !Sub AuthLambdaRegion-${ParamClassCode}
+      Type: String
+      Value: us-east-1
+
+  AuthLambdaJwks:
+    Type: "AWS::SSM::Parameter"
+    Properties: 
+      Name: !Sub AuthLambdaJwks-${ParamClassCode}
+      Type: String
+      Value: 
+        Fn::Join:
+          - ""
+          - - "Update to value in file at https://cognito-idp.us-east-1.amazonaws.com/"
+            - Fn::ImportValue: !Sub "UserPoolId-${ParamClassCode}"
+            - "/.well-known/jwks.json"
+
+  AuthLambdaUserPoolId:
+    Type: "AWS::SSM::Parameter"
+    Properties: 
+      Description: The region in which the auth stuff lives used by the lambda function
+      Name: !Sub AuthLambdaUserPoolId-${ParamClassCode}
+      Type: String
+      Value: 
+        Fn::ImportValue: 
+          !Sub "UserPoolId-${ParamClassCode}"
+
+ 

@@ -1,0 +1,51 @@
+{
+    "variables" : {
+        "azure_client_id": "",
+        "azure_client_secret": "",
+        "azure_tenant_id": "",
+        "azure_subscription_id": "",
+        "azure_region": "",
+        "azure_vm_size": "Standard_B1s",
+        "run_user" : "",
+        "resource_group": "",
+        "image_name": "Lab-Test-Image"
+    },
+    "builders": [
+        {
+            "name" : "AMI Builder Lab",
+            "type": "azure-arm",
+            "client_id": "{{ user `azure_client_id` }}",
+            "client_secret": "{{ user `azure_client_secret` }}",
+            "tenant_id": "{{ user `azure_tenant_id` }}",
+            "subscription_id": "{{ user `azure_subscription_id` }}",
+            "managed_image_resource_group_name": "{{ user `resource_group` }}",
+            "managed_image_name": "{{ user `image_name` }}",
+            "os_type": "Windows",
+            "image_publisher": "MicrosoftWindowsServer",
+            "image_offer": "WindowsServer",
+            "image_sku": "2019-Datacenter",
+            "communicator": "winrm",
+            "winrm_use_ssl": true,
+            "winrm_insecure": true,
+            "winrm_timeout": "3m",
+            "winrm_username": "packer",
+            "azure_tags": {
+                "Name" : "{{ user `image_name` }}",
+                "Created_With" : "packer-io",
+                "Created_By" : "{{ user `run_user` }}"
+            },
+            "location": "{{ user `azure_region` }}",
+            "vm_size": "{{ user `azure_vm_size` }}"
+        }
+    ],
+    "provisioners": [
+        {
+        "type": "powershell",
+        "inline": [
+            "Add-WindowsFeature Web-Server",
+            "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit",
+            "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }"
+        ]
+        }
+    ]
+  }

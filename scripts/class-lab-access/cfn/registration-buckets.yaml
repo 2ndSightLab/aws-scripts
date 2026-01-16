@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A bucket for hosting 2SL class resources
+
+Parameters: 
+  ParamClassCode:
+    Description: classcode
+    Type: String
+ 
+#TODO so can log 
+#You must give the log-delivery group WRITE and READ_ACP permissions to the target bucket (Service: Amazon S3; 
+#Status Code: 400; Error Code: InvalidTargetBucketForLogging; Request ID: 7B4F917FFE26F6D4; S3 Extended Request 
+#ID: a1Vy4eo1zmu53HbhmhPsn8RtBt3VeYezWNlx8jKXNg29idemKtwnOFmaVV1OZ68YRYwTSftxwXk=)
+#Physical ID:test-cloud.2ndsightlab.com
+#Client Request Token:Console-UpdateStack-9403ef8b-d286-4606-8dd4-1db95120216c
+#22:32:34 UTC-0800 UPDATE_IN_PROGRESS  AWS::S3::Bucket PrivateContentBucket  
+
+Resources:
+
+  LogBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub "${ParamClassCode}-2sl-logs"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true  
+
+  PublicContentBucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: 
+        Fn::ImportValue: 
+          !Sub "${ParamClassCode}-ContentDomain"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      #LoggingConfiguration:
+      #  DestinationBucketName: !Ref LogBucket
+      #  LogFilePrefix: public-content-bucket
+      WebsiteConfiguration:
+        ErrorDocument: index.html
+        IndexDocument: index.html
+
+  PrivateContentBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: 
+        Fn::ImportValue: 
+          !Sub "${ParamClassCode}-AuthDomain"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true  
+      #LoggingConfiguration:
+      #  DestinationBucketName: !Ref LogBucket
+      #  LogFilePrefix: private-content-bucket
+
+  LamdaBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub "${ParamClassCode}-2sl-lambda"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true 
+
+
+Outputs:
+  PublicContentBucket:
+    Value: !Ref PublicContentBucket
+    Export: 
+      Name: !Sub PublicBucket-${ParamClassCode} 
+  PublicContentBucketDomainName:
+    Value: !GetAtt [PublicContentBucket, DomainName]
+    Export: 
+      Name: !Sub PublicBucketDomain-${ParamClassCode} 
+  PublicContentBucketUrl:
+    Value: !Join ['', ['https://', !GetAtt [PublicContentBucket, DomainName]]]
+    Export: 
+      Name: !Sub PublicBucketUrl-${ParamClassCode} 
+  PublicContentBucketArn:
+    Value: !Join ['', ["arn:aws:s3:::", !Ref PublicContentBucket, "/*"]]  
+    Export:
+      Name: !Sub PublicBucketArn-${ParamClassCode} 
+
+  PrivateContentBucket:
+    Value: !Ref PrivateContentBucket
+    Export: 
+      Name: !Sub PrivateBucket-${ParamClassCode} 
+  PrivateContentBucketDomainName:
+    Value: !GetAtt [PrivateContentBucket, DomainName]
+    Export: 
+      Name: !Sub PrivateBucketDomain-${ParamClassCode} 
+  PrivateContentBucketUrl:
+    Value: !Join ['', ['https://', !GetAtt [PrivateContentBucket, DomainName]]]
+    Export: 
+      Name: !Sub PrivateBucketUrl-${ParamClassCode} 
+  PrivateContentBucketArn:
+    Value: !Join ['', ["arn:aws:s3:::", !Ref PrivateContentBucket, "/*"]]  
+    Export:
+      Name: !Sub PrivateBucketArn-${ParamClassCode} 
+
+  LogBucket:
+    Value: !Ref LogBucket
+    Export: 
+      Name: !Sub LogBucket-${ParamClassCode} 
+  LogContentBucketDomainName:
+    Value: !GetAtt [LogBucket, DomainName]
+    Export: 
+      Name: !Sub LogBucketDomain-${ParamClassCode} 
+  LogContentBucketUrl:
+    Value: !Join ['', ['https://', !GetAtt [LogBucket, DomainName]]]
+    Export: 
+      Name: !Sub LogBucketUrl-${ParamClassCode} 
+  LogContentBucketArn:
+    Value: !Join ['', ["arn:aws:s3:::", !Ref LogBucket, "/*"]]  
+    Export:
+      Name: !Sub LogArn-${ParamClassCode} 
+

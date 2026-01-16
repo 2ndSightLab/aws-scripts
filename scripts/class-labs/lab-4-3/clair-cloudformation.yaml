@@ -1,0 +1,377 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws 
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, 
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by 
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials 
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, 
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way, 
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or 
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES 
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Lan 4-3: Clair Server - CLair'
+
+Parameters:
+  KeyName:
+    Description: EC2 Key Pair to allow SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+  EC2InstanceAMIId:
+    Type: AWS::EC2::Image::Id
+    Description: AMI id for the node instances.
+    Default: ami-032509850cf9ee54e
+  EC2InstanceType:
+    Description: EC2 instance type for the node instances
+    Type: String
+    Default: t3.medium
+    AllowedValues:
+    - t2.small
+    - t2.medium
+    - t2.large
+    - t2.xlarge
+    - t2.2xlarge
+    - t3.nano
+    - t3.micro
+    - t3.small
+    - t3.medium
+    - t3.large
+    - t3.xlarge
+    - t3.2xlarge
+    - m3.medium
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.10xlarge
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.12xlarge
+    - m5.24xlarge
+    - c4.large
+    - c4.xlarge
+    - c4.2xlarge
+    - c4.4xlarge
+    - c4.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    - c5.18xlarge
+    - i3.large
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - i3.16xlarge
+    - r3.xlarge
+    - r3.2xlarge
+    - r3.4xlarge
+    - r3.8xlarge
+    - r4.large
+    - r4.xlarge
+    - r4.2xlarge
+    - r4.4xlarge
+    - r4.8xlarge
+    - r4.16xlarge
+    - x1.16xlarge
+    - x1.32xlarge
+    - p2.xlarge
+    - p2.8xlarge
+    - p2.16xlarge
+    - p3.2xlarge
+    - p3.8xlarge
+    - p3.16xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.12xlarge
+    - r5.24xlarge
+    - r5d.large
+    - r5d.xlarge
+    - r5d.2xlarge
+    - r5d.4xlarge
+    - r5d.12xlarge
+    - r5d.24xlarge
+    - z1d.large
+    - z1d.xlarge
+    - z1d.2xlarge
+    - z1d.3xlarge
+    - z1d.6xlarge
+    - z1d.12xlarge
+    ConstraintDescription: Must be a valid EC2 instance type
+  VpcId:
+    Description: The VPC of the worker instances
+    Type: AWS::EC2::VPC::Id
+  Subnet:
+    Description: Subnet ID for deploying the VM.
+    Type: String
+  Username:
+    Description: Your username for taggging resources.
+    Type: String
+  ManagmentIPAddress:
+    Description: Public IP to allow SSH
+    Type: String
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+
+Resources:
+  ClairIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+          Sid: ""
+        Version: 2012-10-17
+  ClairIamPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - logs:DescribeLogStreams
+          Effect: Allow
+          Resource: "arn:aws:logs:*:*:*"
+        Version: "2012-10-17"
+      PolicyName: Clair_CLOUDWATCH_LOGS
+      Roles:
+      - !Ref ClairIamRole
+  ClairInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+      - !Ref ClairIamRole
+
+  ClairSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Clair
+      VpcId: !Ref VpcId
+      SecurityGroupEgress: 
+      - CidrIp: 169.254.169.123/32
+        IpProtocol: udp
+        FromPort: 123
+        ToPort: 123
+      - CidrIp: 169.254.169.123/32
+        IpProtocol: tcp
+        FromPort: 123
+        ToPort: 123
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+      SecurityGroupIngress: 
+      - CidrIp: !Sub ${ManagmentIPAddress}
+        IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 6060
+        ToPort: 6060
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 6061
+        ToPort: 6061
+      Tags:
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: Name
+        Value: ClairSecurityGroup
+      - Key: Created_By
+        Value: !Sub ${Username}
+  ClairNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Clair Public Interface
+      GroupSet:
+        - !Sub ${ClairSecurityGroup}
+      SubnetId: !Ref Subnet
+      Tags:
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: Name
+        Value: ClairSecurityGroup-Public-ENI
+      - Key: Created_By
+        Value: !Sub ${Username}
+  ClairPublicElasticIP:
+    Type: AWS::EC2::EIP
+  ClairPublicElasticIPAssociation:
+    Type: "AWS::EC2::EIPAssociation"
+    Properties:
+      AllocationId: !GetAtt ClairPublicElasticIP.AllocationId
+      NetworkInterfaceId: !Sub ${ClairNetworkInterface}
+  ClairServer: 
+    Type: "AWS::EC2::Instance"
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /etc/awslogs/awslogs.conf:
+              content: |
+                [general]
+                state_file = /var/lib/awslogs/agent-state        
+                
+                [/var/log/dmesg]
+                file = /var/log/dmesg
+                log_group_name = /var/log/dmesg
+                log_stream_name = Clair-ec2-server
+
+                [/var/log/messages]
+                file = /var/log/messages
+                log_group_name = /var/log/messages
+                log_stream_name = Clair-ec2-server
+                datetime_format = %b %d %H:%M:%S
+
+                [/var/log/docker]
+                file = /var/log/docker
+                log_group_name = /var/log/docker
+                log_stream_name = Clair-ec2-server
+                datetime_format = %Y-%m-%dT%H:%M:%S.%f
+
+                [/var/log/ecs/audit.log]
+                file = /var/log/ecs/audit.log.*
+                log_group_name = /var/log/ecs/audit.log
+                log_stream_name = Clair-ec2-server
+                datetime_format = %Y-%m-%dT%H:%M:%SZ
+
+    Properties: 
+      ImageId: !Sub ${EC2InstanceAMIId}
+      InstanceType: !Sub ${EC2InstanceType}
+      IamInstanceProfile: !Ref ClairInstanceProfile
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Sub ${ClairNetworkInterface}
+          DeviceIndex: '0'
+      KeyName: !Ref KeyName
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -x
+            yum check-update
+            yum install -y aws-cfn-bootstrap aws-cli jq docker
+
+            amazon-linux-extras enable corretto8
+            yum install -y java-1.8.0-amazon-corretto
+
+            sudo curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+
+            # Install the files and packages from the metadata
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource ClairServer --region ${AWS::Region}
+
+            systemctl restart docker
+            systemctl enable docker.service
+            mkdir -p /docker-data/{clair,postgres,clair-tmp,clairctl-reports}
+            chmod 777 /docker-data/clair
+            chmod 777 /docker-data/clairctl-reports
+            chmod 777 /docker-data/clair-tmp
+            chmod 777 /docker-data/postgres
+            
+
+            cat > /docker-data/clair/config.yaml <<EOF
+            clair:
+              database:
+                type: pgsql
+                options:
+                  source: postgresql://clair:ChangeMe@postgres:5432/clair?sslmode=disable
+                  cachesize: 16384
+              api:
+                port: 6060
+                healthport: 6061
+                timeout: 900s
+              updater:
+                interval: 2h
+              notifier:
+                attempts: 3
+                renotifyinterval: 2h
+            EOF
+            
+            cat > /docker-data/docker-compose.yml <<EOF
+            version: '2.1'
+
+            services:
+              postgres:
+                image: postgres:9.6
+                restart: unless-stopped
+                volumes:
+                  - /docker-data/postgres/:/var/lib/postgresql/data:rw
+                environment:
+                  - POSTGRES_PASSWORD=ChangeMe
+                  - POSTGRES_USER=clair
+                  - POSTGRES_DB=clair
+                
+              clair:
+                image: quay.io/coreos/clair:latest
+                restart: unless-stopped
+                volumes:
+                  - /docker-data/clair/:/config/:ro
+                  - /docker-data/clair-tmp/:/tmp/:rw
+                depends_on: 
+                  postgres:
+                    condition: service_started
+                command: [--log-level=debug, --config, /config/config.yaml]
+                user: root
+                ports:
+                  - "6060:6060"
+                  - "6061:6061"
+
+              clairctl:
+                image: jgsqware/clairctl:latest
+                restart: unless-stopped
+                environment: 
+                  - DOCKER_API_VERSION=1.24
+                volumes:
+                  - /docker-data/clairctl-reports/:/reports/:rw
+                  - /var/run/docker.sock:/var/run/docker.sock:ro
+                depends_on: 
+                  clair: 
+                    condition: service_started
+                user: root
+            EOF
+
+            cd /docker-data && docker-compose up -d
+
+            # Signal the status from cfn-init
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ClairServer --region ${AWS::Region}
+      Tags:
+      - Key: Name
+        Value: ClairServer
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: Created_By
+        Value: !Sub ${Username}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+
+Outputs:
+  ClairIP:
+    Description: Clair IP Address
+    Value: !Ref ClairPublicElasticIP

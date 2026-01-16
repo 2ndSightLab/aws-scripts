@@ -1,0 +1,6 @@
+#rest get repo
+git fetch
+git reset --hard origin/master
+
+#sync local files to an s3 bucket folder
+aws s3 sync . s3://2slpt/BB202009

@@ -1,0 +1,25 @@
+{
+  "Records": [
+    {
+      "cf": {
+        "request": {
+          "headers": {
+            "host": [
+              {
+                "value": "d123.cf.net",
+                "key": "Host"
+              }
+            ]
+          },
+          "clientIp": "2001:cdba::3257:9652",
+          "uri": "/experiment-pixel.jpg",
+          "method": "GET",
+          "querystring": "id_token=eyJraWQiOiJmWXlJTmNEVE8rV2NEVU9zSVVmNEVoUjZcL1ZmaWVvam1FXC9UMFoxOUVvWHM9IiwiYWxnIjoiUlMyNTYifQ.eyJhdF9oYXNoIjoiaGQxa2NEakpyMUtUdEVlU1V3Sm40dyIsInN1YiI6ImYwNTVkNTJlLTZiMjYtNGQ2Ni04MzMwLTc0OGQ4ZmIzMTg3OSIsImF1ZCI6IjcycDNrYzhhN2E0NDk1aG81dWo2dG5tcmdlIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImV2ZW50X2lkIjoiZTIzMTM3MDYtNDM5YS00NjgzLTgxMjItZDRjZjlmM2ZkMTZlIiwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE1Nzk1MTM3ODUsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xXzBFbnNzT0hjOCIsImNvZ25pdG86dXNlcm5hbWUiOiJmMDU1ZDUyZS02YjI2LTRkNjYtODMzMC03NDhkOGZiMzE4NzkiLCJleHAiOjE1Nzk1MTczODUsImlhdCI6MTU3OTUxMzc4NSwiZW1haWwiOiJpbmZvQDJuZHNpZ2h0bGFiLmNvbSJ9.AL1e_FRCDJsY_r_4wF9VNVksm5Z7wZDG-Mdmy81DqE4FH-75kSoHA0Gxn-9xu7QQW_2J1WsNcFVDilDrryZ7jamAglA-3lORqEZwUR2nq2NdLqEDyXlEuvQ1timXOKZ8gpZcZdt9aXRppLMbaqpfelek_bkygqeiV1InIt18BrdxG7jkgObc1TiqAcTKR7Slqw-QZfPOu2NMaFyznD0hVc6tzpFbsP5Ma_lge8YyQw34Vxnyuqrbiza0GDgfDpUvhpS6bDB4tY3OmJ2-R7D2YESxjzoHP6BareJ28pePgoTQ53caMoLyXis4M95mBNGgy7tAUAkv5JT4KueiSyg0Dw&access_token=eyJraWQiOiI0UWtpNmhQVzFHUHJHVHFCVzBEcTNTXC9qb3VKUlJEUjJXSnV6RG5uQkVZbz0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJmMDU1ZDUyZS02YjI2LTRkNjYtODMzMC03NDhkOGZiMzE4NzkiLCJldmVudF9pZCI6ImUyMzEzNzA2LTQzOWEtNDY4My04MTIyLWQ0Y2Y5ZjNmZDE2ZSIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4gb3BlbmlkIiwiYXV0aF90aW1lIjoxNTc5NTEzNzg1LCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV8wRW5zc09IYzgiLCJleHAiOjE1Nzk1MTczODUsImlhdCI6MTU3OTUxMzc4NSwidmVyc2lvbiI6MiwianRpIjoiYTMzM2VmMjctMTU4Mi00NmFmLTgwMmEtOGQ5NzFkOWFjNGY3IiwiY2xpZW50X2lkIjoiNzJwM2tjOGE3YTQ0OTVobzV1ajZ0bm1yZ2UiLCJ1c2VybmFtZSI6ImYwNTVkNTJlLTZiMjYtNGQ2Ni04MzMwLTc0OGQ4ZmIzMTg3OSJ9.PAShm0CInX_2L0xDbOCEID4-qO94OC8Mw8tolEHuRwt8Rbo1wrMMz5MJOEHfOGZ1_7_Lo-Cw8F9CVEh7DIm-__UqU0kmVL4wJeZygyGPBObP2fHq0kbDxQIVEC_rs6X_TzvE8kzGzFDX0MLZuanu3r3CbGxto7lyJ1emv7GhYIofiurnZGZpvFR-pFpcrj6SbJEK1-UyDezo1cEyhQcV08gYd0eEUvAVoFh3DBLNvXuECK7N5mtsMijTjJsXRYLLB1j2ZUqposcIF6To8hAlmw8puyIhV8cI0BIL-29XnnZh0GcaGpBViGhIYwIeSv1D-FF810U1qnjZAtfY6__-bQ&expires_in=3600&token_type=Bearer"
+        },
+        "config": {
+          "distributionId": "EXAMPLE"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free,
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed,
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way,
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+
+####
+# EC2 Role Profile
+###
+
+#STEP 2
+cd ~/[Your Class Repo]/lab-4-1/aws
+
+#STEP 3
+cat ec2-admin-role.yaml
+
+#STEP 4
+
+aws cloudformation create-stack --stack-name ec2-admin-role --template-body file://ec2-admin-role.yaml --capabilities CAPABILITY_NAMED_IAM
+
+#STEP 26
+aws configure
+
+#STEP 27
+aws ec2 describe-instances
+
+#Follow remaining steps in lab to use your role...
+
+####
+# Permission boundary
+###
+
+#STEP 2
+cd ~/[Your Repo]/lab-4-1/aws
+
+#STEP 3
+cat permission-boundary.json
+
+#STEP 4
+aws iam create-policy --policy-name permission-boundary --policy-document file://permission-boundary.json
+
+#STEP 7
+cat policy-with-permission-boundary.json
+
+#STEP 8
+aws sts get-caller-identity --output text --query 'Account'
+
+#STEP 9
+sed -i "s/\[YOUR ACCOUNT NUMBER\]/678543187013/" policy-with-permission-boundary.json
+
+#STEP 10
+aws iam create-policy --policy-name policy-with-permission-boundary --policy-document file://policy-with-permission-boundary.json

@@ -1,0 +1,115 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free,
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed,
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way,
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+#TIP: Put your IAM related stacks in one file which will require the IAM capability.
+#You might only allow certain people to perform IAM related functions in certain environments.
+AWSTemplateFormatVersion: '2010-09-09'
+Description: '2SL3000 EKS Roles'
+
+Resources:
+
+  AWSServiceRoleForAmazonEKS:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - eks.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+
+  NodeInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+      - !Ref NodeInstanceRole
+
+  NodeInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+
+  FlowLogIamPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:DescribeLogGroups
+          - logs:DescribeLogStreams
+          - logs:PutLogEvents
+          Effect: Allow
+          Resource: "*"
+        Version: "2012-10-17"
+      PolicyName: VPC_FLOW_LOGS
+      Roles:
+      - !Ref FlowLogIamRole
+
+  FlowLogIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: vpc-flow-logs.amazonaws.com
+          Sid: ""
+        Version: 2012-10-17
+
+Outputs:
+  NodeInstanceRole:
+    Description: The node instance role
+    Value: !GetAtt NodeInstanceRole.Arn
+    Export:
+       Name: NodeInstanceRole
+  EKSRole:
+    Description: Role for EKS Cluster
+    Value: !GetAtt AWSServiceRoleForAmazonEKS.Arn
+    Export:
+       Name: EKSRole
+  EKSFlowLogsRole:
+    Description: Role for EKS VPC FlowLogs
+    Value: !GetAtt FlowLogIamRole.Arn
+    Export:
+      Name: EKSFlowLogsRole

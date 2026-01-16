@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+
+  CFOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: 'OriginAccessIdentity for WebBucket'
+
+  CFDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: 'true'
+        HttpVersion: http2
+        DefaultRootObject: index.html
+        #Aliases:
+        #  !Ref DomainName
+        #ViewerCertificate:
+        #  AcmCertificateArn: !Ref SSLArn
+        #  MinimumProtocolVersion: TLSv1.2_2018
+        #  SslSupportMethod: sni-only
+        WebACLId: !ImportValue wafWebACL
+        Origins:
+          -
+            Id: ContentOrigin
+            DomainName: 
+              !ImportValue WebBucketDomain
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CFOriginAccessIdentity}
+
+        DefaultCacheBehavior:
+          TargetOriginId: ContentOrigin
+          ForwardedValues:
+            QueryString: 'true'
+            Headers:
+                - Origin
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: allow-all
+        
+        CacheBehaviors:
+          - PathPattern: 'content/*'
+            TargetOriginId: ContentOrigin
+            ForwardedValues:
+              QueryString: 'true'
+              Headers:
+                - Accept
+                - Referer
+                - Authorization
+                - Content-Type
+                - Origin
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: 
+              - DELETE
+              - GET
+              - HEAD
+              - OPTIONS
+              - PATCH
+              - POST
+              - PUT
+            CachedMethods: 
+              - GET
+              - HEAD
+      
+  PublicBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: 
+        Fn::ImportValue:
+          !Sub "WebBucket"
+      PolicyDocument:
+        Statement:
+          -
+            Effect: Allow
+            Action: s3:GetObject
+            Principal:
+              CanonicalUser: !GetAtt CFOriginAccessIdentity.S3CanonicalUserId
+            Resource: 
+              Fn::ImportValue: 
+                !Sub "WebBucketArn"
+
+Outputs:
+  CloudFrontDistribution:
+    Value: !Sub 'https://console.aws.amazon.com/cloudfront/home?region=${AWS::Region}#distribution-settings:${CFDistribution}'
+  CloudFrontUrl:
+    Value: !Sub 'https://${CFDistribution.DomainName}/index.html'
+  CloudFrontContentDomain:
+    Value: !GetAtt CFDistribution.DomainName
+    Export:
+      Name: !Sub "CloudFrontContentDomain-Demo"
+
+ 

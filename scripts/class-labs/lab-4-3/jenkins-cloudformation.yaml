@@ -1,0 +1,461 @@
+#####################################################################################################
+# Copyright Notice
+# All Rights Reserved.
+# All course materials (the “Materials”) are protected by copyright under U.S. Copyright laws 
+# and are the property of 2nd Sight Lab. They are provided pursuant to a royalty free, 
+# perpetual license to the course attendee (the "Attendee") to whom they were presented by 
+# 2nd Sight Lab and are solely for the training and education of the Attendee. The Materials 
+# may not be copied, reproduced, distributed, offered for sale, published, displayed, performed, 
+# modified, used to create derivative works, transmitted to others, or used or exploited in any way, 
+# including, in whole or in part, as training materials by or for any third party.
+
+# The above copyright notice and this permission notice shall be included in all copies or 
+# substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES 
+# OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#####################################################################################################
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Lan 4-3: Jenkins Server'
+
+Parameters:
+  KeyName:
+    Description: EC2 Key Pair to allow SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+  EC2InstanceAMIId:
+    Type: AWS::EC2::Image::Id
+    Description: AMI id for the node instances.
+    Default: ami-032509850cf9ee54e
+  EC2InstanceType:
+    Description: EC2 instance type for the node instances
+    Type: String
+    Default: t3.medium
+    AllowedValues:
+    - t2.small
+    - t2.medium
+    - t2.large
+    - t2.xlarge
+    - t2.2xlarge
+    - t3.nano
+    - t3.micro
+    - t3.small
+    - t3.medium
+    - t3.large
+    - t3.xlarge
+    - t3.2xlarge
+    - m3.medium
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.10xlarge
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.12xlarge
+    - m5.24xlarge
+    - c4.large
+    - c4.xlarge
+    - c4.2xlarge
+    - c4.4xlarge
+    - c4.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    - c5.18xlarge
+    - i3.large
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - i3.16xlarge
+    - r3.xlarge
+    - r3.2xlarge
+    - r3.4xlarge
+    - r3.8xlarge
+    - r4.large
+    - r4.xlarge
+    - r4.2xlarge
+    - r4.4xlarge
+    - r4.8xlarge
+    - r4.16xlarge
+    - x1.16xlarge
+    - x1.32xlarge
+    - p2.xlarge
+    - p2.8xlarge
+    - p2.16xlarge
+    - p3.2xlarge
+    - p3.8xlarge
+    - p3.16xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.12xlarge
+    - r5.24xlarge
+    - r5d.large
+    - r5d.xlarge
+    - r5d.2xlarge
+    - r5d.4xlarge
+    - r5d.12xlarge
+    - r5d.24xlarge
+    - z1d.large
+    - z1d.xlarge
+    - z1d.2xlarge
+    - z1d.3xlarge
+    - z1d.6xlarge
+    - z1d.12xlarge
+    ConstraintDescription: Must be a valid EC2 instance type
+  VpcId:
+    Description: The VPC of the worker instances
+    Type: AWS::EC2::VPC::Id
+  Subnet:
+    Description: Subnet ID for deploying the VM.
+    Type: String
+  Username:
+    Description: Your username for taggging resources.
+    Type: String
+  ManagmentIPAddress:
+    Description: Public IP to allow SSH
+    Type: String
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+
+Resources:
+  JenkinsIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+          Sid: ""
+        Version: 2012-10-17
+  JenkinsIamPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - logs:DescribeLogStreams
+          Effect: Allow
+          Resource: "arn:aws:logs:*:*:*"
+        Version: "2012-10-17"
+      PolicyName: JENKINS_CLOUDWATCH_LOGS
+      Roles:
+      - !Ref JenkinsIamRole
+  JenkinsInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+      - !Ref JenkinsIamRole
+
+  JenkinsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Jenkins
+      VpcId: !Ref VpcId
+      SecurityGroupEgress: 
+      - CidrIp: 169.254.169.123/32
+        IpProtocol: udp
+        FromPort: 123
+        ToPort: 123
+      - CidrIp: 169.254.169.123/32
+        IpProtocol: tcp
+        FromPort: 123
+        ToPort: 123
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 6060
+        ToPort: 6060
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 6061
+        ToPort: 6061
+      SecurityGroupIngress: 
+      - CidrIp: !Sub ${ManagmentIPAddress}
+        IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+      Tags:
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: Name
+        Value: JenkinsSecurityGroup
+      - Key: Created_By
+        Value: !Sub ${Username}
+  JenkinsNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Jenkins Public Interface
+      GroupSet:
+        - !Sub ${JenkinsSecurityGroup}
+      SubnetId: !Ref Subnet
+      Tags:
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: Name
+        Value: JenkinsSecurityGroup-Public-ENI
+      - Key: Created_By
+        Value: !Sub ${Username}
+  JenkinsPublicElasticIP:
+    Type: AWS::EC2::EIP
+  JenkinsPublicElasticIPAssociation:
+    Type: "AWS::EC2::EIPAssociation"
+    Properties:
+      AllocationId: !GetAtt JenkinsPublicElasticIP.AllocationId
+      NetworkInterfaceId: !Sub ${JenkinsNetworkInterface}
+  JenkinsServer: 
+    Type: "AWS::EC2::Instance"
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /etc/awslogs/awslogs.conf:
+              content: |
+                [general]
+                state_file = /var/lib/awslogs/agent-state        
+                
+                [/var/log/dmesg]
+                file = /var/log/dmesg
+                log_group_name = /var/log/dmesg
+                log_stream_name = jenkins-ec2-server
+
+                [/var/log/messages]
+                file = /var/log/messages
+                log_group_name = /var/log/messages
+                log_stream_name = jenkins-ec2-server
+                datetime_format = %b %d %H:%M:%S
+
+                [/var/log/docker]
+                file = /var/log/docker
+                log_group_name = /var/log/docker
+                log_stream_name = jenkins-ec2-server
+                datetime_format = %Y-%m-%dT%H:%M:%S.%f
+
+                [/var/log/ecs/audit.log]
+                file = /var/log/ecs/audit.log.*
+                log_group_name = /var/log/ecs/audit.log
+                log_stream_name = jenkins-ec2-server
+                datetime_format = %Y-%m-%dT%H:%M:%SZ
+
+    Properties: 
+      ImageId: !Sub ${EC2InstanceAMIId}
+      InstanceType: !Sub ${EC2InstanceType}
+      IamInstanceProfile: !Ref JenkinsInstanceProfile
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Sub ${JenkinsNetworkInterface}
+          DeviceIndex: '0'
+      KeyName: !Ref KeyName
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -x
+            yum check-update
+            yum install -y aws-cfn-bootstrap aws-cli jq docker
+
+            amazon-linux-extras enable corretto8
+            yum install -y java-1.8.0-amazon-corretto
+
+            # Install the files and packages from the metadata
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource JenkinsServer --region ${AWS::Region}
+
+            systemctl restart awslogsd
+            systemctl enable awslogsd.service
+            systemctl restart docker
+            systemctl enable docker.service
+            mkdir -p /docker-data/jenkins
+            chmod 777 /docker-data/jenkins
+
+            docker run -d --net=host --pid=host --privileged=true --log-driver=awslogs --log-opt awslogs-region=${AWS::Region} --log-opt awslogs-group=2sl3000-jenkins-lab --log-opt awslogs-create-group=true --restart=always -p 8080:8080 -p 50000:50000 -v /docker-data/jenkins:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock:ro -v /usr/bin/docker:/usr/bin/docker:ro -e JAVA_OPTS='-Djenkins.install.runSetupWizard=false' --name jenkins jenkins/jenkins:lts
+
+            sleep 30
+
+            cat > owasp-template.xml <<EOF
+            <?xml version='1.1' encoding='UTF-8'?>
+            <flow-definition plugin="workflow-job@2.35">
+              <description></description>
+              <keepDependencies>false</keepDependencies>
+              <properties/>
+              <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.74">
+                <script>#!groovy
+
+            node {
+                catchError {
+                    stage(&apos;Checkout&apos;) {
+                        checkout([\$class: &apos;GitSCM&apos;, branches: [[name: &apos;*/develop&apos;]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: &apos;https://github.com/aws/aws-cli.git&apos;]]])
+                    }
+
+                    stage(&apos;Dependency Check&apos;) {
+                        dependencyCheck additionalArguments: '', odcInstallation: 'owasp'
+                    }
+
+                    stage(&quot;Check Results&quot;) {
+                        dependencyCheckPublisher pattern: ''
+                    }
+                }
+            }</script>
+                <sandbox>false</sandbox>
+              </definition>
+              <triggers/>
+              <disabled>false</disabled>
+            </flow-definition>
+            EOF
+
+            cat > clair-template.xml <<'EOF'
+            <?xml version='1.1' encoding='UTF-8'?>
+            <flow-definition plugin="workflow-job@2.35">
+              <actions/>
+              <description></description>
+              <keepDependencies>false</keepDependencies>
+              <properties>
+                <hudson.model.ParametersDefinitionProperty>
+                  <parameterDefinitions>
+                    <hudson.model.StringParameterDefinition>
+                      <name>CLAIR_URL</name>
+                      <description>IP address of Clair</description>
+                      <defaultValue></defaultValue>
+                      <trim>false</trim>
+                    </hudson.model.StringParameterDefinition>
+                  </parameterDefinitions>
+                </hudson.model.ParametersDefinitionProperty>
+              </properties>
+              <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.74">
+                <script>#!groovy
+
+            node {
+                stage(&apos;Create Clair Config&apos;) {
+                    sh &quot;&quot;&quot;
+                      echo &apos;
+                      clair:
+                          port: 6060
+                          healthPort: 6061
+                          uri: http://${!params.CLAIR_URL}
+                          report:
+                              path: ./reports
+                              format: json &apos; &gt;&gt; clair.yml
+                    &quot;&quot;&quot;
+                }
+
+                stage(&quot;Upload Local Jenkins Image to Clair&quot;) {
+                    sh &quot;&quot;&quot;
+                        /var/jenkins_home/clairctl --config ./clair.yml analyze quay.io/coreos/hyperkube:v1.9.6_coreos.2 || true
+                    &quot;&quot;&quot;
+                }
+
+                stage(&quot;Analyze Image&quot;) {
+                    sh &quot;&quot;&quot;
+                        /var/jenkins_home/clairctl --config ./clair.yml report quay.io/coreos/hyperkube:v1.9.6_coreos.2 --format json || true
+                    &quot;&quot;&quot;
+                }
+
+                stage(&quot;Store Report&quot;) {
+                    sh &quot;&quot;&quot;
+                        /var/jenkins_home/clairctl --config ./clair.yml report quay.io/coreos/hyperkube:v1.9.6_coreos.2 --format json || true
+                    &quot;&quot;&quot;
+
+                    archiveArtifacts artifacts: &apos;reports/json/*&apos;, allowEmptyArchive: true, fingerprint: false, onlyIfSuccessful: false
+                }
+            }</script>
+                <sandbox>true</sandbox>
+              </definition>
+              <triggers/>
+              <disabled>false</disabled>
+            </flow-definition>
+            EOF
+
+            curl http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar > jenkins-cli.jar
+            java -jar jenkins-cli.jar -s http://127.0.0.1:8080 install-plugin dependency-check-jenkins-plugin
+            java -jar jenkins-cli.jar -s http://127.0.0.1:8080 install-plugin workflow-aggregator
+            java -jar jenkins-cli.jar -s http://127.0.0.1:8080 install-plugin git
+
+
+            cat > /docker-data/jenkins/org.jenkinsci.plugins.DependencyCheck.DependencyCheckToolBuilder.xml <<EOF
+            <?xml version='1.1' encoding='UTF-8'?>
+            <org.jenkinsci.plugins.DependencyCheck.DependencyCheckToolBuilder_-DependencyCheckToolBuilderDescriptor plugin="dependency-check-jenkins-plugin@5.0.2">
+              <installations>
+                <org.jenkinsci.plugins.DependencyCheck.tools.DependencyCheckInstallation>
+                  <name>owasp</name>
+                  <home></home>
+                  <properties>
+                    <hudson.tools.InstallSourceProperty>
+                      <installers>
+                        <org.jenkinsci.plugins.DependencyCheck.tools.DependencyCheckInstaller>
+                          <id>5.2.2</id>
+                        </org.jenkinsci.plugins.DependencyCheck.tools.DependencyCheckInstaller>
+                      </installers>
+                    </hudson.tools.InstallSourceProperty>
+                  </properties>
+                </org.jenkinsci.plugins.DependencyCheck.tools.DependencyCheckInstallation>
+              </installations>
+            </org.jenkinsci.plugins.DependencyCheck.DependencyCheckToolBuilder_-DependencyCheckToolBuilderDescriptor>
+            EOF
+
+            java -jar jenkins-cli.jar -s http://127.0.0.1:8080 restart
+
+            sleep 60
+
+            java -jar jenkins-cli.jar -s http://127.0.0.1:8080 create-job 'OWASP Scanner' < owasp-template.xml
+            java -jar jenkins-cli.jar -s http://127.0.0.1:8080 create-job 'Clair Scanner' < clair-template.xml
+
+            PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')
+            ARCH=$(uname -m)
+            if [[ "$(uname -m)" == *"64"* ]]; then ARCH="amd64"; else ARCH="386"; fi
+            echo $PLATFORM
+            echo $ARCH
+
+            curl -o /docker-data/jenkins/clairctl "https://s3.amazonaws.com/clairctl/latest/clairctl-$PLATFORM-$ARCH"
+            chmod +x /docker-data/jenkins/clairctl
+            
+            iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
+            iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443
+            iptables-save > /etc/sysconfig/iptables
+
+            # Signal the status from cfn-init
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource JenkinsServer --region ${AWS::Region}
+      Tags:
+      - Key: Name
+        Value: JenkinsServer
+      - Key: StackName
+        Value: !Sub ${AWS::StackName}
+      - Key: Created_By
+        Value: !Sub ${Username}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+
+Outputs:
+  JenkinsIP:
+    Description: Jenkins IP Address
+    Value: !Ref JenkinsPublicElasticIP
