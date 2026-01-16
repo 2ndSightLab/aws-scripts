@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:us-east-2:257014219170:log-group:foxy-dns:*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "3.150.160.171"
+        },
+        "StringEquals": {
+          "logs:kms-key": "arn:aws:kms:us-east-2:957225115248:key/8e4a1e88-f99d-435a-9cf7-cac5e0a9930c"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "arn:aws:kms:us-east-2:957225115248:key/8e4a1e88-f99d-435a-9cf7-cac5e0a9930c",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "3.150.160.171"
+        }
+      }
+    }
+  ]
+}
