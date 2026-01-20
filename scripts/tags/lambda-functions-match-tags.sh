@@ -4,6 +4,7 @@
 TAG_FILTER="Tag1=Value1|Tag2=Value2|Tag3=Value3|Tag4=Value4"
 PROFILE="your profile name"
 NAME_FILTER="kawabunga"
+REGION="us-west-2"
 # ---------------------------------------
 
 
@@ -12,7 +13,7 @@ SEARCH_PATTERN=$(echo "$TAG_FILTER" | sed 's/=/": "/g' | sed 's/|/|" /g' | sed '
 
 while IFS=$'\t' read -r name arn; do
     # Fetch tags exactly like your original script
-    TAGS=$(aws lambda list-tags --resource "$arn" --profile $PROFILE --region us-west-2)
+    TAGS=$(aws lambda list-tags --resource "$arn" --profile $PROFILE --region $REGION)
 
     # CHECK: Name Match (Ignore Case) OR Tag Match
     if [[ "${name,,}" == *"${NAME_FILTER,,}"* ]] || echo "$TAGS" | grep -qE "$SEARCH_PATTERN"; then
