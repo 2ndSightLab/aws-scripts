@@ -1,5 +1,5 @@
 #!bin/bash 
-#Find all the functions matching a list of tags
+#Find all the functions matching a list of tags where ANY of the tags match (not ALL required)
 TAG_FILTER="Tag1=Value1|Tag2=Value2|Tag3=Value3|Tag4=Value4"
 
 NAME_FILTER="kawabunga"
