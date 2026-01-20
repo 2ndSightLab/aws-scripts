@@ -7,6 +7,7 @@ NAME_FILTER="kawabunga"
 REGION="us-west-2"
 # ---------------------------------------
 
+aws lambda list-functions --query 'Functions[*].[FunctionName,FunctionArn]' --output text --profile $PROFILE --region $REGION > functions.txt
 
 # This converts key1=1|key2=2 into "key1": "1"|"key2": "2"
 SEARCH_PATTERN=$(echo "$TAG_FILTER" | sed 's/=/": "/g' | sed 's/|/|" /g' | sed 's/^/"/')
