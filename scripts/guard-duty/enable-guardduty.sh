@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 REGION="${AWS_REGION:-us-east-1}"
 
@@ -28,7 +27,8 @@ if [ "$STATUS" != "ENABLED" ]; then
 fi
 
 DETECTOR_INFO=$(aws guardduty get-detector --detector-id "$DETECTOR_ID" --region "$REGION" --output json)
-S3_MALWARE_STATUS=$(aws guardduty get-malware-scan-settings --detector-id "$DETECTOR_ID" --region "$REGION" 2>/dev/null | jq -r 'if .ScanResourceCriteria.Include.S3_BUCKET_NAME then "ENABLED" else "NOT_ENABLED" end' || echo "NOT_CONFIGURED")
+MALWARE_PLANS=$(aws guardduty list-malware-protection-plans --region "$REGION" || echo '{"MalwareProtectionPlans":[]}')
+PLAN_COUNT=$(echo "$MALWARE_PLANS" | jq -r '.MalwareProtectionPlans | length')
 
 echo "========================================="
 echo "GuardDuty Feature Status"
@@ -40,10 +40,44 @@ echo "$DETECTOR_INFO" | jq -r 'path(..) as $p | getpath($p) | select(type == "ob
 echo ""
 echo "Features:"
 echo "$DETECTOR_INFO" | jq -r '.Features[]? | "\(.Name): \(.Status)", (.AdditionalConfiguration[]? | "  \(.Name): \(.Status)")'
-echo "S3_MALWARE_SCAN: $S3_MALWARE_STATUS"
+if [ "$PLAN_COUNT" -gt 0 ]; then
+    echo "S3_MALWARE_PROTECTION: ENABLED ($PLAN_COUNT plan(s))"
+else
+    echo "S3_MALWARE_PROTECTION: NOT_ENABLED"
+fi
 echo "========================================="
 
-if [ "$S3_MALWARE_STATUS" != "ENABLED" ]; then
+echo ""
+echo "Checking for disabled features..."
+while IFS= read -r FEATURE <&3; do
+    if [ -n "$FEATURE" ]; then
+        read -p "$FEATURE is disabled. Enable it? (y/n): " ENABLE
+        if [ "$ENABLE" = "y" ]; then
+            aws guardduty update-detector --detector-id "$DETECTOR_ID" --region "$REGION" --features Name="$FEATURE",Status=ENABLED
+            echo "✓ $FEATURE enabled"
+        fi
+    fi
+done 3< <(echo "$DETECTOR_INFO" | jq -r '.Features[]? | select(.Status == "DISABLED") | .Name')
+
+echo "Checking for disabled sub-features..."
+
+while IFS= read -r FEATURE_DATA <&3; do
+    if [ -n "$FEATURE_DATA" ]; then
+        PARENT=$(echo "$FEATURE_DATA" | jq -r '.Name')
+        while IFS= read -r SUBFEATURE <&4; do
+            if [ -n "$SUBFEATURE" ]; then
+                read -p "  $SUBFEATURE (under $PARENT) is disabled. Enable it? (y/n): " ENABLE
+                if [ "$ENABLE" = "y" ]; then
+                    aws guardduty update-detector --detector-id "$DETECTOR_ID" --region "$REGION" \
+                      --cli-input-json "{\"DetectorId\":\"$DETECTOR_ID\",\"Features\":[{\"Name\":\"$PARENT\",\"Status\":\"ENABLED\",\"AdditionalConfiguration\":[{\"Name\":\"$SUBFEATURE\",\"Status\":\"ENABLED\"}]}]}"
+                    echo "✓ $SUBFEATURE enabled"
+                fi
+            fi
+        done 4< <(echo "$FEATURE_DATA" | jq -r '.AdditionalConfiguration[]? | select(.Status == "DISABLED") | .Name')
+    fi
+done 3< <(echo "$DETECTOR_INFO" | jq -c '.Features[]? | select(.AdditionalConfiguration != null) | {Name: .Name, AdditionalConfiguration: .AdditionalConfiguration}')
+
+if [ "$PLAN_COUNT" -eq 0 ]; then
     read -p "S3 Malware Protection not enabled. Enable it? (y/n): " ENABLE
     if [ "$ENABLE" = "y" ]; then
         echo "Enter bucket name:"
@@ -61,14 +95,19 @@ if [ "$S3_MALWARE_STATUS" != "ENABLED" ]; then
             KMS_KEY_ID=""
         fi
         
-        aws iam create-role --role-name "$ROLE_NAME" --assume-role-policy-document '{
-          "Version": "2012-10-17",
-          "Statement": [{
-            "Effect": "Allow",
-            "Principal": {"Service": "malware-protection-plan.guardduty.amazonaws.com"},
-            "Action": "sts:AssumeRole"
-          }]
-        }' 2>/dev/null || echo "Role exists"
+        if ! aws iam get-role --role-name "$ROLE_NAME" >/dev/null 2>&1; then
+            aws iam create-role --role-name "$ROLE_NAME" --assume-role-policy-document '{
+              "Version": "2012-10-17",
+              "Statement": [{
+                "Effect": "Allow",
+                "Principal": {"Service": "malware-protection-plan.guardduty.amazonaws.com"},
+                "Action": "sts:AssumeRole"
+              }]
+            }'
+            echo "Role created: $ROLE_NAME"
+        else
+            echo "Role already exists: $ROLE_NAME"
+        fi
         
         cat > /tmp/policy-base.json <<EOF
 {
@@ -123,8 +162,42 @@ EOF
         aws guardduty create-malware-protection-plan \
           --role "$ROLE_ARN" \
           --protected-resource "S3Bucket={BucketName=$BUCKET_NAME}" \
+          --actions "Tagging={Status=ENABLED}" \
           --region "$REGION"
         
         echo "S3 Malware Protection enabled for bucket: $BUCKET_NAME"
     fi
 fi
+
+echo ""
+echo "========================================="
+echo "S3 Malware Protection Plans"
+echo "========================================="
+PLAN_LIST=$(aws guardduty list-malware-protection-plans --region "$REGION" --output json || echo '{"MalwareProtectionPlans":[]}')
+PLAN_COUNT_FINAL=$(echo "$PLAN_LIST" | jq -r '.MalwareProtectionPlans | length')
+if [ "$PLAN_COUNT_FINAL" -eq 0 ]; then
+    echo "No malware protection plans configured"
+else
+    while IFS= read -r PLAN_ID; do
+        if [ -n "$PLAN_ID" ]; then
+            echo ""
+            aws guardduty get-malware-protection-plan --malware-protection-plan-id "$PLAN_ID" --region "$REGION" --output json
+        fi
+    done < <(echo "$PLAN_LIST" | jq -r '.MalwareProtectionPlans[]? | .MalwareProtectionPlanId')
+fi
+echo "========================================="
+
+echo ""
+echo "Checking malware protection plan tagging..."
+while IFS= read -r PLAN_ID <&3; do
+    if [ -n "$PLAN_ID" ]; then
+        TAGGING_STATUS=$(aws guardduty get-malware-protection-plan --malware-protection-plan-id "$PLAN_ID" --region "$REGION" --query 'Actions.Tagging.Status' --output text)
+        if [ "$TAGGING_STATUS" = "DISABLED" ]; then
+            read -p "Tagging is disabled for plan $PLAN_ID. Enable it? (y/n): " ENABLE
+            if [ "$ENABLE" = "y" ]; then
+                aws guardduty update-malware-protection-plan --malware-protection-plan-id "$PLAN_ID" --region "$REGION" --actions Tagging={Status=ENABLED}
+                echo "✓ Tagging enabled for plan $PLAN_ID"
+            fi
+        fi
+    fi
+done 3< <(echo "$PLAN_LIST" | jq -r '.MalwareProtectionPlans[]? | .MalwareProtectionPlanId')
