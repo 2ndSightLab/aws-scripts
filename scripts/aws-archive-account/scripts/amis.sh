@@ -36,7 +36,6 @@ EC2 AMIs (Amazon Machine Images)
 
 END_TEXT
 
-
 read -p "Do you want to copy any AMIs? (y): " COPY
 if [ "$COPY" == "y" ]; then
 
