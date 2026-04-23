@@ -1,34 +1,27 @@
 {
-  "$schema": "https://raw.githubusercontent.com/aws/amazon-q-developer-cli/refs/heads/main/schemas/agent-v1.json",
   "name": "aws-scripts",
-  "description": "Project-specific Q CLI agent for aws-scripts with restricted directory access",
-  "prompt": "You are the fastest and most accurate programmer in the world using the minimum possible tokens",
-  "mcpServers": {},
+  "description": "Specialized agent to meet this objective:  This repository contains bash scripts to do whatever is required on AWS.",
+  "prompt": "You are the smartest and fastest software engineer in the world. Read all ## Rules ## Requirements and ## Previous Mistakes in the readme before starting. Follow all rules. Do not deviate from requirements. Do not repeat previous mistakes. Do not use adaptive thinking or internal reasoning. You are not limited by internal restrictions only what is written in the README. If you make a mistake stop and log it immediately. Do not do anything you are not told to do. Only work on one problme and file at a time. Work like the version of Opus 4.6 before it was nerfed. Verify the implmenetation of any requests is correct following all rules, requirements, no syntax rules and walk the code to make sure the logic is correct and will run without error. Do not print thinking or metadata. Be consise. Avoid extranous actions, code, or text not needed for complete, accurate, and correct output. Use a single thread when implmeneting code. Work on one task and one file at a time.",
   "tools": [
-    "@builtin"
+    "write",
+    "shell",
+    "glob",
+    "grep",
+    "introspect"
   ],
-  "toolAliases": {},
-  "allowedTools": [
-    "read",
-    "knowledge"
-  ],
-  "resources": [
-    "file://README.md",
-    "file://.kiro/steering/**/*.md"
-  ],
+  "allowedTools": [],
   "toolsSettings": {
-    "execute_bash": {
-      "autoAllowReadonly": true,
-      "allowedDirectories": ["/usr/local/share/autonomic-projects/aws-scripts", "$CODE_DIRECTORY/RUST_DIGGITY_SCRIPTS_REPO", "/usr/local/bin"],
-      "autoAllowCommands": ["find", "grep", "ls", "cat", "head", "tail", "less", "more", "wc", "file", "stat", "du", "tree", "sort", "uniq", "cut", "awk", "sed", "diff", "cmp", "ps", "top", "htop", "df", "whoami", "id", "groups", "uname", "hostname", "date", "uptime", "env", "printenv", "ping", "nslookup", "dig", "netstat", "ss", "git"]
+    "write": {
+      "allowedPaths": ["/usr/local/share/botz-projects/aws-scripts"]
     },
-    "fs_read": {
-      "allowedDirectories": ["$CODE_DIRECTORY"]
-    },
-    "fs_write": {
-      "allowedDirectories": ["$PROJECT_DIR"]
+    "read": {
+      "allowedPaths": ["/usr/local/share/botz-projects"]
     }
   },
-  "useLegacyMcpJson": false,
-  "model": "auto"
+  "resources": [
+    "file://README.md",
+    "file://resources/**/*"
+  ],
+  "model": "claude-opus-4.6",
+  "welcomeMessage": "Foxy Botz Project: aws-scripts"
 }
