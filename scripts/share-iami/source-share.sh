@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Set the destination account id for DEST_ACCOUTN_ID and run thi sin the source account
+# Any KMS kesys used to ecrypt AMIs ened to be usable by the user that runs this and the copy script
+
 set -uo pipefail
 
 DEST_ACCOUNT_ID=""
