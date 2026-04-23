@@ -7,6 +7,10 @@
 #  Copyright: © 2025 2nd Sight Lab, LLC
 # 
 #  AWS automation script
+#
+#  NOTE: After I wrote this script realized it would be much more
+#  efficient and cost-effective to use the AMI copy command which
+#  I now use in my own jobs.
 # 
 #  This software, which includes components generated with the assistance of artificial
 #  intelligence, is free for personal, educational, and non-profit use, provided that
