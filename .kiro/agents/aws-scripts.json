@@ -22,6 +22,6 @@
     "file://README.md",
     "file://../botz-global-requirements/README.md"
   ],
-  "model": "gpt-5.6-terra",
+  "model": "claude-opus-4.8",
   "welcomeMessage": "Project: aws-scripts"
 }
